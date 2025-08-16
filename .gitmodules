@@ -1,0 +1,6 @@
+[submodule "python-erc7730"]
+	path = python-erc7730
+	url = https://github.com/akhtarshahnawaz/python-erc7730
+[submodule "clear-signing-erc7730-builder"]
+	path = clear-signing-erc7730-builder
+	url = https://github.com/akhtarshahnawaz/clear-signing-erc7730-builder
