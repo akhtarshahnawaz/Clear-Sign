@@ -10,7 +10,8 @@ import { SubmissionWithReviews } from '@/types'
 import { Eye, Clock, RefreshCw, X } from 'lucide-react'
 import { usePublicClient } from 'wagmi'
 import { CONTRACT_ADDRESS } from '@/lib/constants'
-import { ERC7730_COMMUNITY_REVIEW_ABI } from '@/lib/contract-abi'
+import { ERC7730COMMUNITYREVIEW_ABI } from '@/lib/contract-abi'
+import { WalrusContentModal } from './walrus-content-modal'
 
 // Client-only wrapper to prevent hydration errors
 function ClientOnly({ children }: { children: React.ReactNode }) {
@@ -54,6 +55,8 @@ function CommunitySubmissionsListContent() {
   const [selectedSubmission, setSelectedSubmission] = useState<SubmissionWithReviews | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
+  const [walrusModalOpen, setWalrusModalOpen] = useState(false)
+  const [selectedBlobId, setSelectedBlobId] = useState<string>('')
   
   const { data: totalSubmissions } = useGetTotalSubmissions()
 
@@ -78,21 +81,21 @@ function CommunitySubmissionsListContent() {
         try {
           const submission = await publicClient.readContract({
             address: CONTRACT_ADDRESS,
-            abi: ERC7730_COMMUNITY_REVIEW_ABI,
+            abi: ERC7730COMMUNITYREVIEW_ABI,
             functionName: 'getSubmission',
             args: [BigInt(i)],
           })
           
           const reviews = await publicClient.readContract({
             address: CONTRACT_ADDRESS,
-            abi: ERC7730_COMMUNITY_REVIEW_ABI,
+            abi: ERC7730COMMUNITYREVIEW_ABI,
             functionName: 'getSubmissionReviews',
             args: [BigInt(i)],
           })
           
           const reliabilityScore = await publicClient.readContract({
             address: CONTRACT_ADDRESS,
-            abi: ERC7730_COMMUNITY_REVIEW_ABI,
+            abi: ERC7730COMMUNITYREVIEW_ABI,
             functionName: 'getReliabilityScore',
             args: [BigInt(i)],
           })
@@ -101,7 +104,7 @@ function CommunitySubmissionsListContent() {
             const submissionData: SubmissionWithReviews = {
               id: i,
               submitter: submission.submitter as `0x${string}`,
-              contractId: submission.contractId as `0x${string}`,
+              contractAddress: submission.contractAddress as `0x${string}`,
               walrusBlobId: submission.walrusBlobId,
               hypergraphId: submission.hypergraphId,
               submissionTime: Number(submission.submissionTime) * 1000,
@@ -222,22 +225,57 @@ function CommunitySubmissionsListContent() {
           ) : (
             <div className="space-y-4">
               {communitySubmissions.map((submission) => (
-                <div key={submission.id} className="border rounded-lg p-4">
+                <div key={submission.id} className="border-2 border-gray-200 rounded-lg p-6 hover:border-blue-300 transition-colors">
                   <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium">Contract: {submission.contractId}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Submitted by: {submission.submitter}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Walrus Blob ID: {submission.walrusBlobId}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Hypergraph ID: {submission.hypergraphId}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Submitted: {new Date(submission.submissionTime).toLocaleDateString()}
-                      </p>
+                    <div className="space-y-3">
+                      <div className="border-l-4 border-blue-500 pl-3">
+                        <h3 className="font-semibold text-lg">Contract Address</h3>
+                        <p className="text-sm font-mono text-gray-700 break-all">
+                          {submission.contractAddress}
+                        </p>
+                      </div>
+                      
+                      <div className="border-l-4 border-green-500 pl-3">
+                        <h4 className="font-medium text-gray-800">Submitted by</h4>
+                        <p className="text-sm font-mono text-gray-700">
+                          {submission.submitter}
+                        </p>
+                      </div>
+                      
+                      <div className="border-l-4 border-purple-500 pl-3">
+                        <h4 className="font-medium text-gray-800">Walrus Blob ID</h4>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-mono text-gray-700 break-all">
+                            {submission.walrusBlobId}
+                          </p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedBlobId(submission.walrusBlobId)
+                              setWalrusModalOpen(true)
+                            }}
+                            className="p-1 h-6 w-6 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                            title="View Walrus content"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="border-l-4 border-orange-500 pl-3">
+                        <h4 className="font-medium text-gray-800">Hypergraph ID</h4>
+                        <p className="text-sm font-mono text-gray-700 break-all">
+                          {submission.hypergraphId}
+                        </p>
+                      </div>
+                      
+                      <div className="border-l-4 border-indigo-500 pl-3">
+                        <h4 className="font-medium text-gray-800">Submitted</h4>
+                        <p className="text-sm text-gray-700">
+                          {new Date(submission.submissionTime).toLocaleDateString()}
+                        </p>
+                      </div>
                       
                       {/* Review Statistics with Colors */}
                       <div className="flex items-center space-x-4 mt-2">
@@ -313,6 +351,14 @@ function CommunitySubmissionsListContent() {
           onReviewSubmitted={handleRefreshData}
         />
       )}
+
+      {/* Walrus Content Modal */}
+      <WalrusContentModal
+        isOpen={walrusModalOpen}
+        onClose={() => setWalrusModalOpen(false)}
+        blobId={selectedBlobId}
+        title="View Walrus Content"
+      />
     </>
   )
 }
@@ -398,7 +444,7 @@ function ReviewModal({ submission, onClose, currentAddress, onReviewSubmitted }:
             <div>
               <h4 className="font-medium mb-2">Contract Address</h4>
               <p className="text-sm text-muted-foreground break-all">
-                {submission.contractId}
+                {submission.contractAddress}
               </p>
             </div>
             <div>

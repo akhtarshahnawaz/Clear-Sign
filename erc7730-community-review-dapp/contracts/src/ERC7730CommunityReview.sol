@@ -12,7 +12,7 @@ contract ERC7730CommunityReview is Ownable {
     // Structs
     struct MetadataSubmission {
         address submitter;
-        string contractId;
+        address contractAddress; // Changed from string contractId to address contractAddress
         string walrusBlobId;
         string hypergraphId;
         uint256 submissionTime;
@@ -36,14 +36,14 @@ contract ERC7730CommunityReview is Ownable {
     mapping(uint256 => MetadataSubmission) public submissions;
     mapping(uint256 => mapping(uint256 => Review)) public reviews; // submissionId => reviewId => Review
     mapping(address => uint256[]) public userSubmissions; // user => submission IDs
-    mapping(string => uint256) public contractToSubmission; // contractId => submissionId
+    mapping(address => uint256) public contractToSubmission; // contractAddress => submissionId (changed from string to address)
     mapping(address => mapping(uint256 => bool)) public hasReviewed; // user => submissionId => hasReviewed
 
     // Events
     event MetadataSubmitted(
         uint256 indexed submissionId,
         address indexed submitter,
-        string contractId,
+        address indexed contractAddress, // Changed from contractId to contractAddress
         string walrusBlobId,
         string hypergraphId,
         uint256 timestamp
@@ -90,26 +90,26 @@ contract ERC7730CommunityReview is Ownable {
 
     /**
      * @dev Submit metadata for community review
-     * @param contractId The contract identifier
+     * @param contractAddress The contract address (changed from contractId)
      * @param walrusBlobId The Walrus blob identifier for metadata JSON
      * @param hypergraphId The Hypergraph identifier for metadata knowledge graph
      */
     function submitMetadata(
-        string memory contractId,
+        address contractAddress, // Changed from string contractId to address contractAddress
         string memory walrusBlobId,
         string memory hypergraphId
     ) external {
-        require(bytes(contractId).length > 0, "Contract ID cannot be empty");
+        require(contractAddress != address(0), "Contract address cannot be zero");
         require(bytes(walrusBlobId).length > 0, "Walrus blob ID cannot be empty");
         require(bytes(hypergraphId).length > 0, "Hypergraph ID cannot be empty");
-        require(contractToSubmission[contractId] == 0, "Contract ID already submitted");
+        require(contractToSubmission[contractAddress] == 0, "Contract address already submitted");
 
         _submissionIds++;
         uint256 submissionId = _submissionIds;
 
         submissions[submissionId] = MetadataSubmission({
             submitter: msg.sender,
-            contractId: contractId,
+            contractAddress: contractAddress, // Changed from contractId to contractAddress
             walrusBlobId: walrusBlobId,
             hypergraphId: hypergraphId,
             submissionTime: block.timestamp,
@@ -120,12 +120,12 @@ contract ERC7730CommunityReview is Ownable {
         });
 
         userSubmissions[msg.sender].push(submissionId);
-        contractToSubmission[contractId] = submissionId;
+        contractToSubmission[contractAddress] = submissionId; // Changed from contractId to contractAddress
 
         emit MetadataSubmitted(
             submissionId,
             msg.sender,
-            contractId,
+            contractAddress, // Changed from contractId to contractAddress
             walrusBlobId,
             hypergraphId,
             block.timestamp
@@ -196,12 +196,12 @@ contract ERC7730CommunityReview is Ownable {
     }
 
     /**
-     * @dev Get submission ID by contract ID
-     * @param contractId The contract ID
+     * @dev Get submission ID by contract address (changed from contract ID)
+     * @param contractAddress The contract address
      * @return submissionId The submission ID (0 if not found)
      */
-    function getSubmissionByContract(string memory contractId) external view returns (uint256) {
-        return contractToSubmission[contractId];
+    function getSubmissionByContract(address contractAddress) external view returns (uint256) { // Changed from string to address
+        return contractToSubmission[contractAddress];
     }
 
     /**

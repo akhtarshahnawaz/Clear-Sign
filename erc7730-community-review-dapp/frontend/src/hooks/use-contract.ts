@@ -1,18 +1,20 @@
 'use client'
 
-import { useContractRead, useContractWrite, usePrepareContractWrite, useWaitForTransaction } from 'wagmi'
-import { ERC7730_COMMUNITY_REVIEW_ABI } from '@/lib/contract-abi'
+import { useState, useEffect } from 'react'
+import { useContractRead, useContractWrite, usePrepareContractWrite, useWaitForTransaction, usePublicClient } from 'wagmi'
+import { ERC7730COMMUNITYREVIEW_ABI } from '@/lib/contract-abi'
 import { CONTRACT_ADDRESS } from '@/lib/constants'
 
 export function useContract() {
   // Contract address - this should be set based on your deployment
-  const contractAddress = CONTRACT_ADDRESS
+  const contractAddress = CONTRACT_ADDRESS as `0x${string}`
+  const publicClient = usePublicClient()
 
   // Test function to check if contract is accessible
   const useTestContractAccess = () => {
     return useContractRead({
       address: contractAddress,
-      abi: ERC7730_COMMUNITY_REVIEW_ABI,
+      abi: ERC7730COMMUNITYREVIEW_ABI,
       functionName: 'getTotalSubmissions',
       enabled: !!contractAddress,
     })
@@ -26,7 +28,7 @@ export function useContract() {
     const [isLoading, setIsLoading] = useState(false)
     
     useEffect(() => {
-      if (!totalSubmissions || totalSubmissions === 0) {
+      if (!totalSubmissions || totalSubmissions === BigInt(0)) {
         setSubmissions([])
         return
       }
@@ -36,13 +38,13 @@ export function useContract() {
         try {
           // This is a simplified approach - in production you'd want to batch calls
           const submissionPromises = []
-          for (let i = 1; i <= totalSubmissions; i++) {
+          for (let i = 1; i <= Number(totalSubmissions); i++) {
             submissionPromises.push(
               publicClient.readContract({
                 address: contractAddress,
-                abi: ERC7730_COMMUNITY_REVIEW_ABI,
+                abi: ERC7730COMMUNITYREVIEW_ABI,
                 functionName: 'getSubmission',
-                args: [i],
+                args: [BigInt(i)],
               })
             )
           }
@@ -57,7 +59,7 @@ export function useContract() {
       }
       
       fetchSubmissions()
-    }, [totalSubmissions])
+    }, [totalSubmissions, publicClient, contractAddress])
     
     return { submissions, isLoading }
   }
@@ -66,27 +68,27 @@ export function useContract() {
   const useGetSubmission = (submissionId: number) => {
     return useContractRead({
       address: contractAddress,
-      abi: ERC7730_COMMUNITY_REVIEW_ABI,
+      abi: ERC7730COMMUNITYREVIEW_ABI,
       functionName: 'getSubmission',
-      args: [submissionId],
+      args: [BigInt(submissionId)],
       enabled: !!submissionId && submissionId > 0,
     })
   }
 
-  const useGetSubmissionByContract = (contractId: string) => {
+  const useGetSubmissionByContract = (submissionContractAddress: `0x${string}`) => {
     return useContractRead({
-      address: contractAddress,
-      abi: ERC7730_COMMUNITY_REVIEW_ABI,
+      address: contractAddress, // Use the global contract address
+      abi: ERC7730COMMUNITYREVIEW_ABI,
       functionName: 'getSubmissionByContract',
-      args: [contractId],
-      enabled: !!contractId,
+      args: [submissionContractAddress],
+      enabled: !!submissionContractAddress,
     })
   }
 
   const useGetTotalSubmissions = () => {
     return useContractRead({
       address: contractAddress,
-      abi: ERC7730_COMMUNITY_REVIEW_ABI,
+      abi: ERC7730COMMUNITYREVIEW_ABI,
       functionName: 'getTotalSubmissions',
     })
   }
@@ -94,25 +96,25 @@ export function useContract() {
   const useGetReliabilityScore = (submissionId: number) => {
     return useContractRead({
       address: contractAddress,
-      abi: ERC7730_COMMUNITY_REVIEW_ABI,
+      abi: ERC7730COMMUNITYREVIEW_ABI,
       functionName: 'getReliabilityScore',
-      args: [submissionId],
+      args: [BigInt(submissionId)],
       enabled: !!submissionId && submissionId > 0,
     })
   }
 
   // Write functions
-  const useSubmitMetadata = (contractId: string, walrusBlobId: string, hypergraphId: string) => {
+  const useSubmitMetadata = (submissionContractAddress: `0x${string}`, walrusBlobId: string, hypergraphId: string) => {
     // Debug logging
-    console.log('useSubmitMetadata called with:', { contractId, walrusBlobId, hypergraphId })
+    console.log('useSubmitMetadata called with:', { submissionContractAddress, walrusBlobId, hypergraphId })
     
     const { config, error: prepareError } = usePrepareContractWrite({
-      address: contractAddress,
-      abi: ERC7730_COMMUNITY_REVIEW_ABI,
+      address: contractAddress, // Use the global contract address
+      abi: ERC7730COMMUNITYREVIEW_ABI,
       functionName: 'submitMetadata',
-      args: [contractId, walrusBlobId, hypergraphId],
-      enabled: !!contractId && !!walrusBlobId && !!hypergraphId,
-      gas: 500000, // Add explicit gas limit
+      args: [submissionContractAddress, walrusBlobId, hypergraphId], // submissionContractAddress is the contract being submitted
+      enabled: !!submissionContractAddress && !!walrusBlobId && !!hypergraphId,
+      gas: BigInt(500000), // Add explicit gas limit
     })
 
     // Debug logging for prepare errors
@@ -137,9 +139,9 @@ export function useContract() {
   const useSubmitReview = (submissionId: number, isApproved: boolean, comment: string) => {
     const { config } = usePrepareContractWrite({
       address: contractAddress,
-      abi: ERC7730_COMMUNITY_REVIEW_ABI,
+      abi: ERC7730COMMUNITYREVIEW_ABI,
       functionName: 'submitReview',
-      args: [submissionId, isApproved, comment],
+      args: [BigInt(submissionId), isApproved, comment],
       enabled: !!submissionId && submissionId > 0,
     })
 
@@ -160,9 +162,9 @@ export function useContract() {
   const useDeactivateSubmission = (submissionId: number) => {
     const { config } = usePrepareContractWrite({
       address: contractAddress,
-      abi: ERC7730_COMMUNITY_REVIEW_ABI,
+      abi: ERC7730COMMUNITYREVIEW_ABI,
       functionName: 'deactivateSubmission',
-      args: [submissionId],
+      args: [BigInt(submissionId)],
       enabled: !!submissionId && submissionId > 0,
     })
 

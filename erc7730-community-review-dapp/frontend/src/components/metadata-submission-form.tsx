@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useContract } from '@/hooks/use-contract'
-import { MIN_CONTRACT_ID_LENGTH, MIN_BLOB_ID_LENGTH, MIN_HYPERGRAPH_ID_LENGTH, CONTRACT_ADDRESS } from '@/lib/constants'
+import { MIN_BLOB_ID_LENGTH, MIN_HYPERGRAPH_ID_LENGTH, CONTRACT_ADDRESS } from '@/lib/constants'
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 
 export function MetadataSubmissionForm() {
@@ -17,7 +17,7 @@ export function MetadataSubmissionForm() {
   const { data: totalSubmissions, error: contractError } = useTestContractAccess()
   
   const [formData, setFormData] = useState({
-    contractId: '',
+    contractAddress: '',
     walrusBlobId: '',
     hypergraphId: ''
   })
@@ -25,7 +25,7 @@ export function MetadataSubmissionForm() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   
   const { submit, isLoading, isSuccess, error, hash } = useSubmitMetadata(
-    formData.contractId,
+    formData.contractAddress as `0x${string}`,
     formData.walrusBlobId,
     formData.hypergraphId
   )
@@ -33,10 +33,10 @@ export function MetadataSubmissionForm() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
     
-    if (!formData.contractId) {
-      newErrors.contractId = 'Contract ID is required'
-    } else if (formData.contractId.length < MIN_CONTRACT_ID_LENGTH) {
-      newErrors.contractId = `Contract ID must be at least ${MIN_CONTRACT_ID_LENGTH} characters`
+    if (!formData.contractAddress) {
+      newErrors.contractAddress = 'Contract Address is required'
+    } else if (!formData.contractAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
+      newErrors.contractAddress = 'Contract Address must be a valid Ethereum address'
     }
     
     if (!formData.walrusBlobId) {
@@ -69,7 +69,7 @@ export function MetadataSubmissionForm() {
     
     // Debug logging
     console.log('Submitting metadata with:', {
-      contractId: formData.contractId,
+      contractAddress: formData.contractAddress,
       walrusBlobId: formData.walrusBlobId,
       hypergraphId: formData.hypergraphId,
       address: address
@@ -91,7 +91,7 @@ export function MetadataSubmissionForm() {
 
   const resetForm = () => {
     setFormData({
-      contractId: '',
+      contractAddress: '',
       walrusBlobId: '',
       hypergraphId: ''
     })
@@ -142,19 +142,19 @@ export function MetadataSubmissionForm() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label htmlFor="contractId" className="text-sm font-medium">
-                Contract ID *
+              <label htmlFor="contractAddress" className="text-sm font-medium">
+                Contract Address *
               </label>
               <Input
-                id="contractId"
+                id="contractAddress"
                 type="text"
                 placeholder="0x1234567890123456789012345678901234567890"
-                value={formData.contractId}
-                onChange={(e) => handleInputChange('contractId', e.target.value)}
-                className={errors.contractId ? 'border-destructive' : ''}
+                value={formData.contractAddress}
+                onChange={(e) => handleInputChange('contractAddress', e.target.value)}
+                className={errors.contractAddress ? 'border-destructive' : ''}
               />
-              {errors.contractId && (
-                <p className="text-sm text-destructive">{errors.contractId}</p>
+              {errors.contractAddress && (
+                <p className="text-sm text-destructive">{errors.contractAddress}</p>
               )}
             </div>
 

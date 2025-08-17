@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useContract } from '@/hooks/use-contract'
 import { formatAddress, formatDate, calculateReliabilityScore } from '@/lib/utils'
 import { ContractMetadata } from '@/types'
-import { Search, FileText, Database, Calendar, ThumbsUp, ThumbsDown, CheckCircle, XCircle } from 'lucide-react'
+import { Search, FileText, Database, Calendar, ThumbsUp, ThumbsDown, CheckCircle, XCircle, Eye } from 'lucide-react'
+import { WalrusContentModal } from './walrus-content-modal'
 
 export function MetadataSearch() {
   const { useGetSubmissionByContract, useGetSubmission, useGetReliabilityScore } = useContract()
@@ -16,17 +17,19 @@ export function MetadataSearch() {
   const [searchResult, setSearchResult] = useState<ContractMetadata | null>(null)
   const [isSearching, setIsSearching] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [walrusModalOpen, setWalrusModalOpen] = useState(false)
+  const [selectedBlobId, setSelectedBlobId] = useState<string>('')
   
-  const { refetch: refetchSubmission } = useGetSubmissionByContract(searchQuery)
-  const { data: submissionId } = useGetSubmissionByContract(searchQuery)
+  const { refetch: refetchSubmission } = useGetSubmissionByContract(searchQuery as `0x${string}`)
+  const { data: submissionId } = useGetSubmissionByContract(searchQuery as `0x${string}`)
   const { data: submission } = useGetSubmission(Number(submissionId || 0))
   const { data: reliabilityScore } = useGetReliabilityScore(Number(submissionId || 0))
 
   const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      setError('Please enter a contract ID to search')
-      return
-    }
+          if (!searchQuery.trim()) {
+        setError('Please enter a contract address to search')
+        return
+      }
     
     setIsSearching(true)
     setError(null)
@@ -41,7 +44,7 @@ export function MetadataSearch() {
         setTimeout(() => {
           if (submission && submission.submitter) {
             const metadata: ContractMetadata = {
-              contractId: submission.contractId as `0x${string}`,
+              contractAddress: submission.contractAddress as `0x${string}`,
               submitter: submission.submitter as `0x${string}`,
               walrusBlobId: submission.walrusBlobId,
               hypergraphId: submission.hypergraphId,
@@ -55,7 +58,7 @@ export function MetadataSearch() {
           }
         }, 500)
       } else {
-        setError('No metadata found for this contract ID')
+        setError('No metadata found for this contract address')
       }
     } catch (err) {
       setError('Error searching for metadata')
@@ -82,9 +85,9 @@ export function MetadataSearch() {
       {/* Search Form */}
       <Card className="max-w-2xl mx-auto">
         <CardHeader>
-          <CardTitle>Search Metadata by Contract ID</CardTitle>
+          <CardTitle>Search Metadata by Contract Address</CardTitle>
           <CardDescription>
-            Enter a contract ID to find its associated metadata and review information.
+            Enter a contract address to find its associated metadata and review information.
           </CardDescription>
         </CardHeader>
         
@@ -143,7 +146,7 @@ export function MetadataSearch() {
                   Contract ID
                 </h4>
                 <p className="text-sm text-muted-foreground break-all font-mono">
-                  {searchResult.contractId}
+                  {searchResult.contractAddress}
                 </p>
               </div>
               
@@ -175,11 +178,25 @@ export function MetadataSearch() {
                   <FileText className="mr-2 h-4 w-4" />
                   Walrus Blob ID
                 </h4>
-                <p className="text-sm text-muted-foreground break-all font-mono bg-muted p-3 rounded">
-                  {searchResult.walrusBlobId}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-muted-foreground break-all font-mono bg-muted p-3 rounded flex-1">
+                    {searchResult.walrusBlobId}
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedBlobId(searchResult.walrusBlobId)
+                      setWalrusModalOpen(true)
+                    }}
+                    className="p-2 h-10 w-10 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                    title="View Walrus content"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  This ID references the metadata JSON file stored in Walrus.
+                  This ID references the metadata JSON file stored in Walrus. Click the eye icon to view the content.
                 </p>
               </div>
               
@@ -308,6 +325,14 @@ export function MetadataSearch() {
           </CardContent>
         </Card>
       )}
+
+      {/* Walrus Content Modal */}
+      <WalrusContentModal
+        isOpen={walrusModalOpen}
+        onClose={() => setWalrusModalOpen(false)}
+        blobId={selectedBlobId}
+        title="View Walrus Content"
+      />
     </div>
   )
 }

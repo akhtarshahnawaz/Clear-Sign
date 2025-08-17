@@ -11,7 +11,7 @@ contract ERC7730CommunityReviewTest is Test {
     address public bob = address(0x2);
     address public carol = address(0x3);
     
-    string public constant CONTRACT_ID = "0x1234567890123456789012345678901234567890";
+    address public constant CONTRACT_ADDRESS = address(0x1234567890123456789012345678901234567890);
     string public constant WALRUS_BLOB_ID = "vtrj4hZwDbqha2sCDBtJryloe8AqCD-Rq_C_TyNXBE4";
     string public constant HYPERGRAPH_ID = "QmHash123456789012345678901234567890123456789";
     
@@ -26,7 +26,7 @@ contract ERC7730CommunityReviewTest is Test {
         vm.startPrank(alice);
         
         reviewContract.submitMetadata(
-            CONTRACT_ID,
+            CONTRACT_ADDRESS,
             WALRUS_BLOB_ID,
             HYPERGRAPH_ID
         );
@@ -34,7 +34,7 @@ contract ERC7730CommunityReviewTest is Test {
         ERC7730CommunityReview.MetadataSubmission memory submission = reviewContract.getSubmission(1);
         
         assertEq(submission.submitter, alice);
-        assertEq(submission.contractId, CONTRACT_ID);
+        assertEq(submission.contractAddress, CONTRACT_ADDRESS);
         assertEq(submission.walrusBlobId, WALRUS_BLOB_ID);
         assertEq(submission.hypergraphId, HYPERGRAPH_ID);
         assertTrue(submission.isActive);
@@ -47,26 +47,26 @@ contract ERC7730CommunityReviewTest is Test {
     
     function testSubmitMetadataDuplicateContractId() public {
         vm.startPrank(alice);
-        reviewContract.submitMetadata(CONTRACT_ID, WALRUS_BLOB_ID, HYPERGRAPH_ID);
+        reviewContract.submitMetadata(CONTRACT_ADDRESS, WALRUS_BLOB_ID, HYPERGRAPH_ID);
         vm.stopPrank();
         
         vm.startPrank(bob);
-        vm.expectRevert("Contract ID already submitted");
-        reviewContract.submitMetadata(CONTRACT_ID, "different", "different");
+        vm.expectRevert("Contract address already submitted");
+        reviewContract.submitMetadata(CONTRACT_ADDRESS, "different", "different");
         vm.stopPrank();
     }
     
     function testSubmitMetadataEmptyFields() public {
         vm.startPrank(alice);
         
-        vm.expectRevert("Contract ID cannot be empty");
-        reviewContract.submitMetadata("", WALRUS_BLOB_ID, HYPERGRAPH_ID);
+        vm.expectRevert("Contract address cannot be zero");
+        reviewContract.submitMetadata(address(0), WALRUS_BLOB_ID, HYPERGRAPH_ID);
         
         vm.expectRevert("Walrus blob ID cannot be empty");
-        reviewContract.submitMetadata(CONTRACT_ID, "", HYPERGRAPH_ID);
+        reviewContract.submitMetadata(CONTRACT_ADDRESS, "", HYPERGRAPH_ID);
         
         vm.expectRevert("Hypergraph ID cannot be empty");
-        reviewContract.submitMetadata(CONTRACT_ID, WALRUS_BLOB_ID, "");
+        reviewContract.submitMetadata(CONTRACT_ADDRESS, WALRUS_BLOB_ID, "");
         
         vm.stopPrank();
     }
@@ -74,7 +74,7 @@ contract ERC7730CommunityReviewTest is Test {
     function testSubmitReview() public {
         // Alice submits metadata
         vm.startPrank(alice);
-        reviewContract.submitMetadata(CONTRACT_ID, WALRUS_BLOB_ID, HYPERGRAPH_ID);
+        reviewContract.submitMetadata(CONTRACT_ADDRESS, WALRUS_BLOB_ID, HYPERGRAPH_ID);
         vm.stopPrank();
         
         // Bob reviews and approves
@@ -100,7 +100,7 @@ contract ERC7730CommunityReviewTest is Test {
     
     function testSubmitReviewOwnSubmission() public {
         vm.startPrank(alice);
-        reviewContract.submitMetadata(CONTRACT_ID, WALRUS_BLOB_ID, HYPERGRAPH_ID);
+        reviewContract.submitMetadata(CONTRACT_ADDRESS, WALRUS_BLOB_ID, HYPERGRAPH_ID);
         
         vm.expectRevert("Cannot review own submission");
         reviewContract.submitReview(1, true, "Self review");
@@ -110,7 +110,7 @@ contract ERC7730CommunityReviewTest is Test {
     function testSubmitReviewTwice() public {
         // Alice submits metadata
         vm.startPrank(alice);
-        reviewContract.submitMetadata(CONTRACT_ID, WALRUS_BLOB_ID, HYPERGRAPH_ID);
+        reviewContract.submitMetadata(CONTRACT_ADDRESS, WALRUS_BLOB_ID, HYPERGRAPH_ID);
         vm.stopPrank();
         
         // Bob reviews
@@ -131,7 +131,7 @@ contract ERC7730CommunityReviewTest is Test {
     
     function testDeactivateSubmission() public {
         vm.startPrank(alice);
-        reviewContract.submitMetadata(CONTRACT_ID, WALRUS_BLOB_ID, HYPERGRAPH_ID);
+        reviewContract.submitMetadata(CONTRACT_ADDRESS, WALRUS_BLOB_ID, HYPERGRAPH_ID);
         
         reviewContract.deactivateSubmission(1);
         
@@ -142,7 +142,7 @@ contract ERC7730CommunityReviewTest is Test {
     
     function testDeactivateSubmissionNotOwner() public {
         vm.startPrank(alice);
-        reviewContract.submitMetadata(CONTRACT_ID, WALRUS_BLOB_ID, HYPERGRAPH_ID);
+        reviewContract.submitMetadata(CONTRACT_ADDRESS, WALRUS_BLOB_ID, HYPERGRAPH_ID);
         vm.stopPrank();
         
         vm.startPrank(bob);
@@ -153,20 +153,20 @@ contract ERC7730CommunityReviewTest is Test {
     
     function testGetSubmissionByContract() public {
         vm.startPrank(alice);
-        reviewContract.submitMetadata(CONTRACT_ID, WALRUS_BLOB_ID, HYPERGRAPH_ID);
+        reviewContract.submitMetadata(CONTRACT_ADDRESS, WALRUS_BLOB_ID, HYPERGRAPH_ID);
         vm.stopPrank();
         
-        uint256 submissionId = reviewContract.getSubmissionByContract(CONTRACT_ID);
+        uint256 submissionId = reviewContract.getSubmissionByContract(CONTRACT_ADDRESS);
         assertEq(submissionId, 1);
         
-        uint256 nonExistentId = reviewContract.getSubmissionByContract("non-existent");
+        uint256 nonExistentId = reviewContract.getSubmissionByContract(address(0x999));
         assertEq(nonExistentId, 0);
     }
     
     function testGetUserSubmissions() public {
         vm.startPrank(alice);
-        reviewContract.submitMetadata(CONTRACT_ID, WALRUS_BLOB_ID, HYPERGRAPH_ID);
-        reviewContract.submitMetadata("0x9876543210987654321098765432109876543210", "blob2", "graph2");
+        reviewContract.submitMetadata(CONTRACT_ADDRESS, WALRUS_BLOB_ID, HYPERGRAPH_ID);
+        reviewContract.submitMetadata(address(0x9876543210987654321098765432109876543210), "blob2", "graph2");
         vm.stopPrank();
         
         uint256[] memory submissions = reviewContract.getUserSubmissions(alice);
@@ -178,7 +178,7 @@ contract ERC7730CommunityReviewTest is Test {
     function testGetReliabilityScore() public {
         // Alice submits metadata
         vm.startPrank(alice);
-        reviewContract.submitMetadata(CONTRACT_ID, WALRUS_BLOB_ID, HYPERGRAPH_ID);
+        reviewContract.submitMetadata(CONTRACT_ADDRESS, WALRUS_BLOB_ID, HYPERGRAPH_ID);
         vm.stopPrank();
         
         // No reviews yet
@@ -207,7 +207,7 @@ contract ERC7730CommunityReviewTest is Test {
         assertEq(reviewContract.getTotalReviews(), 0);
         
         vm.startPrank(alice);
-        reviewContract.submitMetadata(CONTRACT_ID, WALRUS_BLOB_ID, HYPERGRAPH_ID);
+        reviewContract.submitMetadata(CONTRACT_ADDRESS, WALRUS_BLOB_ID, HYPERGRAPH_ID);
         vm.stopPrank();
         
         assertEq(reviewContract.getTotalSubmissions(), 1);
@@ -221,7 +221,7 @@ contract ERC7730CommunityReviewTest is Test {
     
     function testGetSubmissionReviews() public {
         vm.startPrank(alice);
-        reviewContract.submitMetadata(CONTRACT_ID, WALRUS_BLOB_ID, HYPERGRAPH_ID);
+        reviewContract.submitMetadata(CONTRACT_ADDRESS, WALRUS_BLOB_ID, HYPERGRAPH_ID);
         vm.stopPrank();
         
         vm.startPrank(bob);

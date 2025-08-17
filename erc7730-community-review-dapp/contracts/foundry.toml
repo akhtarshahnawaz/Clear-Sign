@@ -13,8 +13,3 @@ runs = 1000
 runs = 1000
 depth = 15
 fail_on_revert = false
-
-[profile.default.metadata]
-bytecode_hash = "none"
-
-# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

@@ -1,7 +1,7 @@
 export interface Submission {
   id: number
   submitter: `0x${string}`
-  contractId: `0x${string}` // Changed from string to address type
+  contractAddress: `0x${string}` // Changed from contractId to contractAddress
   walrusBlobId: string
   hypergraphId: string
   submissionTime: number
@@ -24,7 +24,7 @@ export interface SubmissionWithReviews extends Submission {
 }
 
 export interface ContractMetadata {
-  contractId: `0x${string}`
+  contractAddress: `0x${string}` // Changed from contractId to contractAddress
   submitter: `0x${string}`
   walrusBlobId: string
   hypergraphId: string

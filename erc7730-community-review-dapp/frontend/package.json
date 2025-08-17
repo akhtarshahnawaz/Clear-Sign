@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "generate-abi": "cd ../contracts && npm run generate-abi",
+    "predev": "npm run generate-abi",
+    "prebuild": "npm run generate-abi"
   },
   "dependencies": {
     "clsx": "^2.0.0",

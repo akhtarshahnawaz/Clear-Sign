@@ -12,6 +12,7 @@ import { usePublicClient } from 'wagmi'
 import { CONTRACT_ADDRESS } from '@/lib/constants'
 import { ERC7730COMMUNITYREVIEW_ABI } from '@/lib/contract-abi'
 import Link from 'next/link'
+import { WalrusContentModal } from './walrus-content-modal'
 
 // Client-only wrapper to prevent hydration errors
 function ClientOnly({ children }: { children: React.ReactNode }) {
@@ -55,6 +56,8 @@ function MySubmissionsListContent() {
   const [selectedSubmission, setSelectedSubmission] = useState<SubmissionWithReviews | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
+  const [walrusModalOpen, setWalrusModalOpen] = useState(false)
+  const [selectedBlobId, setSelectedBlobId] = useState<string>('')
   
   const { data: totalSubmissions } = useGetTotalSubmissions()
 
@@ -261,9 +264,23 @@ function MySubmissionsListContent() {
                       
                       <div className="border-l-4 border-purple-500 pl-3">
                         <h4 className="font-medium text-gray-800">Walrus Blob ID</h4>
-                        <p className="text-sm font-mono text-gray-700 break-all">
-                          {submission.walrusBlobId}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-mono text-gray-700 break-all">
+                            {submission.walrusBlobId}
+                          </p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedBlobId(submission.walrusBlobId)
+                              setWalrusModalOpen(true)
+                            }}
+                            className="p-1 h-6 w-6 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                            title="View Walrus content"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                       
                       <div className="border-l-4 border-orange-500 pl-3">
@@ -351,6 +368,14 @@ function MySubmissionsListContent() {
           onClose={handleCloseSubmission}
         />
       )}
+
+      {/* Walrus Content Modal */}
+      <WalrusContentModal
+        isOpen={walrusModalOpen}
+        onClose={() => setWalrusModalOpen(false)}
+        blobId={selectedBlobId}
+        title="View Walrus Content"
+      />
     </>
   )
 }
