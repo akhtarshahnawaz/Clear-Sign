@@ -5,6 +5,13 @@ import { Button } from './ui/button'
 import { Wallet, LogOut } from 'lucide-react'
 import { CHAIN_ID, RPC_URL, NETWORK_NAME, BLOCK_EXPLORER } from '@/lib/constants'
 
+// Extend Window interface to include ethereum
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
+}
+
 export function ConnectButton() {
   const { address, isConnected } = useAccount()
   const { connect, connectors, isLoading, pendingConnector } = useConnect()

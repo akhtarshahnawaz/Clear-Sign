@@ -140,8 +140,8 @@ forge test --match-test testFunctionName
 ### Environment Setup
 
 1. **Copy the environment template:**
-   ```bash
-   cd frontend
+```bash
+cd frontend
    cp .env.flow .env.local
    ```
 
@@ -195,20 +195,20 @@ The ABI is automatically generated from the deployed contract:
 ### Running the Application
 
 1. **Install dependencies:**
-   ```bash
+```bash
    npm install
-   ```
+```
 
 2. **Start development server:**
-   ```bash
+```bash
    npm run dev
    ```
 
 3. **Build for production:**
-   ```bash
+```bash
    npm run build
    npm start
-   ```
+```
 
 ### Available Scripts
 

@@ -1,5 +1,5 @@
 // Environment-based configuration for Flow EVM Testnet
-export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS!
+export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS! as `0x${string}`
 
 // Network configuration - Flow EVM Testnet
 export const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL!

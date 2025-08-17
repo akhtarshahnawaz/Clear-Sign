@@ -211,16 +211,16 @@ function SubmissionsListContent() {
   }
 
   // Show submissions list
-  return (
+    return (
     <>
       <Card className="max-w-4xl mx-auto">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Metadata Submissions for Review</CardTitle>
-              <CardDescription>
+          <CardDescription>
                 {totalSubmissions ? `Total submissions: ${totalSubmissions}` : 'Loading...'}
-              </CardDescription>
+          </CardDescription>
             </div>
             <Button onClick={handleRefreshData} variant="outline" size="sm">
               <RefreshCw className="h-4 w-4 mr-2" />
@@ -252,21 +252,21 @@ function SubmissionsListContent() {
                         <p className="text-sm font-mono text-gray-700">
                           {formatAddress(submission.submitter)}
                         </p>
-                      </div>
-                      
+                  </div>
+                  
                       <div className="border-l-4 border-purple-500 pl-3">
                         <h4 className="font-medium text-gray-800">Walrus Blob ID</h4>
                         <p className="text-sm font-mono text-gray-700 break-all">
-                          {submission.walrusBlobId}
-                        </p>
-                      </div>
+                        {submission.walrusBlobId}
+                      </p>
+                    </div>
                       
                       <div className="border-l-4 border-orange-500 pl-3">
                         <h4 className="font-medium text-gray-800">Hypergraph ID</h4>
                         <p className="text-sm font-mono text-gray-700 break-all">
-                          {submission.hypergraphId}
-                        </p>
-                      </div>
+                        {submission.hypergraphId}
+                      </p>
+                    </div>
                       
                       <div className="border-l-4 border-indigo-500 pl-3">
                         <h4 className="font-medium text-gray-800">Submitted</h4>
@@ -286,22 +286,22 @@ function SubmissionsListContent() {
                         </p>
                       )}
                     </div>
-                    <Button
-                      onClick={() => handleViewSubmission(submission)}
-                      variant="outline"
-                      size="sm"
+                <Button
+                  onClick={() => handleViewSubmission(submission)}
+                  variant="outline"
+                  size="sm"
                       disabled={!submission.isActive}
-                    >
+                >
                       <Eye className="h-4 w-4 mr-2" />
                       View Details
-                    </Button>
-                  </div>
+                </Button>
+              </div>
                 </div>
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
 
       {/* Review Modal */}
       {showModal && selectedSubmission && (

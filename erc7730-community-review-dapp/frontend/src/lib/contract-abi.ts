@@ -1,5 +1,5 @@
 // Auto-generated ABI from Foundry build artifacts
-// Generated on: 2025-08-17T07:22:45.543Z
+// Generated on: 2025-08-17T10:29:53.228Z
 // Contract: ERC7730CommunityReview
 
 export const ERC7730COMMUNITYREVIEW_ABI = [
