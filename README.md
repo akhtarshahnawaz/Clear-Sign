@@ -1,452 +1,111 @@
-# Clear-Sign: ERC7730 Community Review DApp
-
-A comprehensive decentralized application for community review of ERC7730 metadata submissions, built with modern web3 technologies and best practices.
-
-## 🏗️ Project Structure
-
-```
-Clear-Sign/
-├── erc7730-community-review-dapp/     # Main DApp project
-│   ├── contracts/                      # Smart contracts (Foundry)
-│   │   ├── src/                        # Solidity source files
-│   │   ├── test/                       # Contract tests
-│   │   ├── script/                     # Deployment scripts
-│   │   ├── scripts/                    # Build and ABI generation scripts
-│   │   └── foundry.toml               # Foundry configuration
-│   └── frontend/                       # Next.js frontend application
-│       ├── src/                        # React source code
-│       ├── public/                     # Static assets
-│       └── package.json               # Frontend dependencies
-├── clear-signing-erc7730-builder/      # Important builder project
-├── python-erc7730/                     # Python utilities
-└── README.md                           # This master documentation
-```
-
-## 🚀 Quick Start
-
-### Prerequisites
-- **Node.js**: Version 18.0.0 or higher
-- **Foundry**: Latest stable version
-- **Git**: Version 2.25.0 or higher
-- **MetaMask**: Browser extension for wallet management
-
-### 1. Clone and Setup
-```bash
-git clone <repository-url>
-cd Clear-Sign
-```
-
-### 2. Backend Setup (Smart Contracts)
-```bash
-cd erc7730-community-review-dapp/contracts
-
-# Install Foundry dependencies
-forge install
-
-# Build contracts
-forge build
-
-# Generate ABI for frontend (automatic)
-npm run generate-abi
-
-# Run tests
-forge test
-```
-
-### 3. Frontend Setup
-```bash
-cd erc7730-community-review-dapp/frontend
-
-# Install dependencies
-npm install
-
-# Generate ABI (if not done automatically)
-npm run generate-abi
-
-# Start development server
-npm run dev
-```
-
-### 4. Start Local Blockchain
-```bash
-# In a new terminal
-cd erc7730-community-review-dapp/contracts
-anvil
-
-# Deploy contracts (in another terminal)
-forge script script/Deploy.s.sol --rpc-url http://127.0.0.1:8545 --broadcast
-```
-
-## 🔧 How Frontend Accesses Contract Data
-
-### **Contract Address Configuration**
-The frontend gets the contract address from environment variables:
-
-```typescript
-// frontend/src/lib/constants.ts
-export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "0x5fbdb2315678afecb367f032d93f642f64180aa3"
-```
-
-**Environment Setup:**
-```bash
-# frontend/.env.local
-NEXT_PUBLIC_CONTRACT_ADDRESS=0x5fbdb2315678afecb367f032d93f642f64180aa3
-NEXT_PUBLIC_RPC_URL=http://127.0.0.1:8545
-NEXT_PUBLIC_CHAIN_ID=31337
-```
-
-### **Contract ABI Access**
-The frontend automatically gets the latest contract ABI through an intelligent generation system:
-
-#### **Automatic ABI Generation Workflow:**
-1. **Foundry Build**: `forge build` generates build artifacts in `contracts/out/`
-2. **ABI Extraction**: Script reads `out/ERC7730CommunityReview.sol/ERC7730CommunityReview.json`
-3. **Frontend Update**: ABI and TypeScript types automatically copied to `frontend/src/lib/`
-
-#### **Generated Files:**
-- `frontend/src/lib/contract-abi.ts` - Complete contract ABI
-- `frontend/src/lib/contract-types.ts` - TypeScript type definitions
-
-#### **Usage in Frontend:**
-```typescript
-// frontend/src/hooks/use-contract.ts
-import { ERC7730COMMUNITYREVIEW_ABI } from '@/lib/contract-abi'
-
-const { data } = useContractRead({
-  address: contractAddress,
-  abi: ERC7730COMMUNITYREVIEW_ABI,
-  functionName: 'getTotalSubmissions',
-})
-```
-
-### **RPC URL and Network Configuration**
-The frontend connects to the blockchain through configured RPC endpoints:
-
-```typescript
-// frontend/src/lib/constants.ts
-export const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "http://127.0.0.1:8545"
-export const CHAIN_ID = parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || "31337")
-```
-
-**Supported Networks:**
-- **Local Development**: `http://127.0.0.1:8545` (Chain ID: 31337)
-- **Sepolia Testnet**: `https://eth-sepolia.g.alchemy.com/v2/...` (Chain ID: 11155111)
-- **Ethereum Mainnet**: `https://eth-mainnet.g.alchemy.com/v2/...` (Chain ID: 1)
-
-### **Walrus Network Configuration**
-The frontend integrates with the Walrus network for decentralized file storage and retrieval:
-
-```typescript
-// frontend/src/lib/constants.ts
-export const WALRUS_PUBLISHER_BASE_URL = process.env.NEXT_PUBLIC_WALRUS_PUBLISHER_BASE_URL || "http://walrus-testnet-publisher.starduststaking.com"
-export const WALRUS_AGGREGATOR_BASE_URL = process.env.NEXT_PUBLIC_WALRUS_AGGREGATOR_BASE_URL || "http://agg.test.walrus.eosusa.io"
-```
-
-**Environment Setup:**
-```bash
-# frontend/.env.local
-NEXT_PUBLIC_WALRUS_PUBLISHER_BASE_URL=http://walrus-testnet-publisher.starduststaking.com
-NEXT_PUBLIC_WALRUS_AGGREGATOR_BASE_URL=http://agg.test.walrus.eosusa.io
-```
-
-**Walrus Network Features:**
-- **Publisher**: Used for publishing files to the Walrus network
-- **Aggregator**: Used for retrieving files by blob ID
-- **File Retrieval**: `curl "$AGGREGATOR/v1/blobs/<blob_id>"` returns JSON content
-- **Integration**: Frontend displays view icons next to Walrus Blob IDs for easy content inspection
-
-## 🔄 Backend Configuration and Workflow
-
-### **Smart Contract Configuration**
-Smart contracts are configured through Foundry's configuration system:
-
-```toml
-# contracts/foundry.toml
-[profile.default]
-src = "src"
-out = "out"
-libs = ["lib"]
-solc_version = "0.8.19"
-optimizer = true
-optimizer_runs = 200
-```
-
-### **Contract Deployment Configuration**
-Deployment settings are managed through environment variables and scripts:
-
-```bash
-# contracts/.env (create this file)
-PRIVATE_KEY=your_private_key_here
-SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/your-api-key
-MAINNET_RPC_URL=https://eth-mainnet.g.alchemy.com/v2/your-api-key
-```
-
-### **ABI Generation Commands**
-```bash
-# From contracts directory
-npm run generate-abi          # Generate ABI only
-npm run build                 # Build and auto-generate ABI
-./scripts/setup-workflow.sh   # Complete workflow script
-
-# From frontend directory
-npm run generate-abi          # Generate ABI from contracts
-npm run dev                   # Auto-generate ABI before starting
-npm run build                 # Auto-generate ABI before building
-```
-
-## 📱 Frontend Architecture
-
-### **Component Structure**
-```
-frontend/src/
-├── app/                      # Next.js App Router
-│   ├── page.tsx             # Homepage (submission form)
-│   ├── my-submissions/      # User's submissions page
-│   ├── review-community/    # Community review page
-│   └── search/              # Metadata search page
-├── components/               # React components
-│   ├── metadata-submission-form.tsx
-│   ├── my-submissions-list.tsx
-│   ├── community-submissions-list.tsx
-│   └── metadata-search.tsx
-├── hooks/                    # Custom React hooks
-│   └── use-contract.ts      # Contract interaction hooks
-└── lib/                      # Utilities and constants
-    ├── contract-abi.ts      # Auto-generated ABI
-    ├── contract-types.ts    # Auto-generated types
-    └── constants.ts         # Configuration constants
-```
-
-### **State Management**
-- **Wagmi**: Ethereum state management and hooks
-- **React Context**: Application state and wallet connection
-- **Local State**: Component-level state management
-
-### **Contract Interactions**
-All contract interactions go through the `useContract` hook:
-
-```typescript
-// Example: Submit metadata
-const { submit, isLoading, isSuccess } = useSubmitMetadata(
-  contractId, 
-  walrusBlobId, 
-  hypergraphId
-)
-
-// Example: Get submissions
-const { data: totalSubmissions } = useGetTotalSubmissions()
-```
-
-## 🧪 Testing and Development
-
-### **Smart Contract Testing**
-```bash
-cd erc7730-community-review-dapp/contracts
-
-# Run all tests
-forge test
-
-# Run with verbose output
-forge test -vv
-
-# Run specific test
-forge test --match-test testSubmitMetadata
-
-# Gas reporting
-forge test --gas-report
-```
-
-### **Frontend Testing**
-```bash
-cd erc7730-community-review-dapp/frontend
-
-# Run test suite
-npm run test
-
-# Run in watch mode
-npm run test:watch
-
-# Type checking
-npm run type-check
-```
-
-### **Integration Testing**
-```bash
-# 1. Start local blockchain
-cd contracts && anvil
-
-# 2. Deploy contracts
-forge script script/Deploy.s.sol --rpc-url http://127.0.0.1:8545 --broadcast
-
-# 3. Start frontend
-cd frontend && npm run dev
-
-# 4. Test complete workflow in browser
-```
-
-## 🚀 Deployment
-
-### **Smart Contract Deployment**
-
-#### **Local Development**
-```bash
-cd contracts
-forge script script/Deploy.s.sol --rpc-url http://127.0.0.1:8545 --broadcast
-```
-
-#### **Testnet Deployment (Sepolia)**
-```bash
-cd contracts
-export PRIVATE_KEY=your_private_key_here
-export SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/your-api-key
-
-forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --verify
-```
-
-#### **Mainnet Deployment**
-```bash
-cd contracts
-export PRIVATE_KEY=your_private_key_here
-export MAINNET_RPC_URL=https://eth-mainnet.g.alchemy.com/v2/your-api-key
-
-# Verify configuration first
-forge script script/Deploy.s.sol --rpc-url $MAINNET_RPC_URL --dry-run
-
-# Deploy to mainnet
-forge script script/Deploy.s.sol --rpc-url $MAINNET_RPC_URL --broadcast --verify
-```
-
-### **Frontend Deployment**
-
-#### **Build for Production**
-```bash
-cd frontend
-npm run build
-npm start
-```
-
-#### **Deploy to Vercel**
-```bash
-npm i -g vercel
-vercel
-# Set environment variables in Vercel dashboard
-```
-
-#### **Deploy to Netlify**
-```bash
-npm run build
-# Deploy build folder to Netlify
-# Set environment variables in Netlify dashboard
-```
-
-## 🔒 Security Features
-
-- **Access Control**: Only submitters can deactivate their submissions
-- **Review Prevention**: Users cannot review their own submissions
-- **Duplicate Prevention**: One review per user per submission
-- **Input Validation**: Comprehensive form validation
-- **Secure Transactions**: MetaMask integration for transaction signing
-
-## 🆘 Troubleshooting
-
-### **Common Issues**
-
-#### **ABI Not Generated**
-```bash
-cd contracts
-forge build
-npm run generate-abi
-```
-
-#### **Frontend Can't Connect**
-```bash
-# Check environment variables
-cd frontend
-cat .env.local
-
-# Check network connection
-curl http://127.0.0.1:8545
-```
-
-#### **Contract Deployment Issues**
-```bash
-cd contracts
-forge build
-forge script script/Deploy.s.sol --rpc-url http://127.0.0.1:8545 --dry-run
-```
-
-### **Debug Commands**
-```bash
-# Check all running processes
-ps aux | grep -E "(anvil|next|forge)"
-
-# Check port usage
-lsof -i :3000
-lsof -i :8545
-
-# Check logs
-cd frontend && npm run dev 2>&1 | tee frontend.log
-cd contracts && anvil 2>&1 | tee anvil.log
-```
-
-## 🔮 Future Enhancements
-
-- [ ] IPFS integration for metadata storage
-- [ ] Advanced review scoring algorithms
-- [ ] Multi-signature review requirements
-- [ ] Automated metadata validation
-- [ ] Integration with other metadata standards
-- [ ] Mobile-optimized interface
-- [ ] Analytics dashboard
-- [ ] API endpoints for external integrations
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-- **Issues**: Create an issue on GitHub
-- **Discussions**: Use GitHub Discussions for questions
-- **Documentation**: Check the inline code comments and this README
-
-## 🙏 Acknowledgments
-
-- Ethereum community for the ERC7730 standard
-- Foundry team for the development framework
-- OpenZeppelin for secure contract libraries
-- Next.js team for the React framework
-- Wagmi team for Ethereum React hooks
+# MetaProof: ERC7730 Community Review
+
+Blindly signing smart contract transactions is one of the biggest risks in web3. When users approve interactions without fully understanding the underlying contract, they expose themselves to malicious code, hidden permissions, or irreversible asset loss. A trusted metadata layer—what we call Clear-Sign—solves this problem by giving users transparent, standardized information about what they are actually signing before they commit.
+
+The challenge is that implementing Clear-Sign at scale requires a universal metadata standard, which ERC7730 introduces. However, ERC7730’s promise quickly runs into practical hurdles: millions of contracts exist, each with unique structures and evolving behaviors, making it nearly impossible for any single authority or automated tool to maintain accurate metadata. Without reliable, verified data, the standard risks being incomplete or misleading, which brings us back to the original problem.
+
+This is where MetaProof steps in. By creating a community-driven validation layer for ERC7730 metadata, MetaProof transforms the burden of centralized curation into a decentralized process of review, verification, and consensus. Instead of relying on opaque sources or incomplete automation, the ecosystem collectively ensures that contract metadata is accurate, trustworthy, and up-to-date. Through open collaboration, peer validation, and transparent governance, MetaProof makes Clear-Sign viable at scale—turning blind signatures into informed, secure decisions.
+
+
+We built MetaProof by integrating Ledger’s ERC7730 metadata generation tool directly into our community verification platform. This allows users to generate ERC7730-compliant metadata JSON files and seamlessly submit them to the community for review and scoring. Once generated, each JSON is stored as a blob on Walrus, and its corresponding hash (blob ID) is broadcasted to the community. This design ensures immutability and verifiability — reviewers can independently retrieve the JSON through its blob ID, verify its contents, and then vote or leave comments on its validity.
+
+The voting process forms the backbone of our reliability scoring mechanism. Each submission accumulates votes from community members, which we aggregate into a reliability score reflecting consensus on the accuracy and trustworthiness of the metadata. These scores, coupled with reviewer comments, create a transparent validation layer. Any external wallet can then integrate Clear-Sign by calling our API, retrieving both the ERC7730 metadata and its associated reliability score, and displaying that information directly to end users before they sign a transaction.
+
+On the technical side, we used Next.js to build the frontend interface, ensuring a responsive and modern user experience. Backend services were written in Python, handling aggregation logic, API endpoints, and scoring calculations. Our smart contracts, written in Solidity, manage the on-chain voting process and ensure that votes and comments are transparently recorded. For storage, we relied on Walrus to store the actual JSON blobs, guaranteeing persistence, while the Flow network hosts the contract deployments.
+
+
+# Documentation Feedback for Ledger
+My overall experience using the ERC-7730 documentation has been positive. The docs are simple, clean, and easy to follow, which makes them very beginner-friendly. I found that the lack of excessive detail was actually helpful at the start, since the hardest part is always getting set up quickly. The external references provided in different places are also useful, as they allow readers to dig deeper into more technical aspects when needed.
+
+That said, I did notice some gaps. For the specific case of working with ERC-7730, the concise nature of the docs worked well, but I can imagine that for users working with the device management kit or exploring advanced use cases, the documentation may feel too lightweight. It sometimes assumes background knowledge, and in those cases, a bit more depth would go a long way.
+
+One particular pain point for me was the lack of documentation around the ERC-7730 Python package and the JSON builder. I ended up spending almost ten hours trying to figure out how to set them up and make them work properly. A dedicated section or quick-start guide for these tools would save developers a lot of time. For example, a short page that shows: how to install the Python package, how to initialize the JSON builder, and a working “hello world”-style example would be extremely valuable.
+
+Related to that, I also found it difficult when some code examples did not run as expected due to version mismatches. It would be very helpful if the documentation clearly mentioned the exact package versions used in each code snippet. That way, developers can easily reproduce the examples without running into deprecation errors or compatibility issues.
+
+In terms of tutorials, I don’t think you need a lot more code samples, but having setup and environment notes alongside the examples would strengthen them significantly. For instance, indicating “tested with Python 3.10 and erc7730-json-builder vX.Y.Z” would immediately clarify compatibility.
+
+From a UX perspective, I really enjoyed the dark, high-contrast UI—it makes reading pleasant and easy on the eyes. If I had one suggestion, it would be to make the central reading panel white or a lighter color, which would give it a more professional look and improve long-form readability while still keeping the surrounding dark theme.
+
+Overall, I think the documentation is already strong, and its clarity makes ERC-7730 approachable even for new developers. With just a few additions—especially around setup guides, package usage, and versioning—it could become a best-in-class resource that accelerates adoption of transparent transaction signing in the Ethereum ecosystem.
+
+
+# 🏗️ Project Structure
+
+The project is organized into three primary modules:
+
+1. **erc7730-community-review-dapp** (main decentralized application)  
+2. **python-erc7730**  
+3. **clear-signing-erc7730-builder**
 
 ---
 
-**Note**: This is a development version. Always test thoroughly on testnets before mainnet deployment.
+## 1. erc7730-community-review-dapp
+This module contains the main decentralized application, consisting of both a **frontend** (built with Next.js) and a **backend** (implemented in Solidity).
 
-## 📋 Quick Reference Commands
+- The `contracts` folder contains the smart contracts (backend).  
+- The `frontend` folder contains the Next.js application (frontend).  
 
-```bash
-# Start development environment
-cd erc7730-community-review-dapp/contracts && anvil &                    # Start blockchain
-cd erc7730-community-review-dapp/contracts && forge script script/Deploy.s.sol --rpc-url http://127.0.0.1:8545 --broadcast  # Deploy contracts
-cd erc7730-community-review-dapp/frontend && npm run dev                 # Start frontend
+This module is fully independent and can be hosted as a standalone application without requiring other modules.
 
-# Stop development environment
-pkill anvil                               # Stop blockchain
-pkill -f "next"                          # Stop frontend
+---
 
-# Check status
-lsof -i :8545                            # Check blockchain port
-lsof -i :3000                            # Check frontend port
+## 2. python-erc7730
+This is a modified fork of Ledger’s official `python-erc7730` package, designed for validation and processing of ERC-7730 JSON files.
 
-# Generate ABI
-cd erc7730-community-review-dapp/contracts && npm run generate-abi
-cd erc7730-community-review-dapp/frontend && npm run generate-abi
+**Enhancements include:**
+- Integration of the **OpenAI API** to automatically generate human-readable naming for functions and fields.
+
+---
+
+## 3. clear-signing-erc7730-builder
+This module is a modified fork of Ledger’s JSON builder.
+
+**Added functionality:**
+- Simplified JSON creation  
+- Enhanced visualization of JSON structures  
+- Direct submission to **Walrus**  
+- Direct submission to the **ERC-7730 Community Review**
+
+This builder depends on the `python-erc7730` package, as it uses the Python package for API access.
+
+---
+
+# 🚀 Installation
+
+## Installing `erc7730-community-review-dapp`
+1. Deploy the contracts located in the `contracts` folder.  
+2. Navigate to the `frontend` folder.  
+3. Configure the `.env.local` file with the following variables:  
+   - `RPC_URL`  
+   - `CONTRACT_ADDRESS`  
+   - `WALRUS_PUBLISHER_URL`  
+   - `WALRUS_AGGREGATOR_URL`  
+4. Install dependencies and start the development server:  
+   ```bash
+   npm install
+   npm run dev
+   ```
+A more detailed setup guide is available inside the erc7730-community-review-dapp folder.
+
+## Installing `python-erc7730` and `clear-signing-erc7730-builder`
+
+1. Clone the `python-erc7730` package and install it locally:
+
+   ```bash
+   pip install .
+   ```
+2. Clone the `clear-signing-erc7730-builder` repository.
+3. Navigate into the folder, install dependencies, and run the application:
+
+   ```bash
+   npm install
+   npm run dev
+   ```
+
+This will start both the web application and the FastAPI backend.
+
+```
+
+Do you want me to also prepare a **README.md ready version** (with a project intro, badges, and links section), so it looks polished for GitHub?
 ```
