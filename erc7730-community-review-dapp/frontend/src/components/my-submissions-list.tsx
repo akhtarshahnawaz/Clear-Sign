@@ -10,7 +10,7 @@ import { SubmissionWithReviews } from '@/types'
 import { Eye, Clock, RefreshCw, Plus, X } from 'lucide-react'
 import { usePublicClient } from 'wagmi'
 import { CONTRACT_ADDRESS } from '@/lib/constants'
-import { ERC7730_COMMUNITY_REVIEW_ABI } from '@/lib/contract-abi'
+import { ERC7730COMMUNITYREVIEW_ABI } from '@/lib/contract-abi'
 import Link from 'next/link'
 
 // Client-only wrapper to prevent hydration errors
@@ -79,30 +79,36 @@ function MySubmissionsListContent() {
         try {
           const submission = await publicClient.readContract({
             address: CONTRACT_ADDRESS,
-            abi: ERC7730_COMMUNITY_REVIEW_ABI,
+            abi: ERC7730COMMUNITYREVIEW_ABI,
             functionName: 'getSubmission',
             args: [BigInt(i)],
           })
           
           const reviews = await publicClient.readContract({
             address: CONTRACT_ADDRESS,
-            abi: ERC7730_COMMUNITY_REVIEW_ABI,
+            abi: ERC7730COMMUNITYREVIEW_ABI,
             functionName: 'getSubmissionReviews',
             args: [BigInt(i)],
           })
           
           const reliabilityScore = await publicClient.readContract({
             address: CONTRACT_ADDRESS,
-            abi: ERC7730_COMMUNITY_REVIEW_ABI,
+            abi: ERC7730COMMUNITYREVIEW_ABI,
             functionName: 'getReliabilityScore',
             args: [BigInt(i)],
           })
           
-          if (submission && submission.submitter.toLowerCase() === address.toLowerCase()) {
+          // Debug: Log the submission data to see what we're getting
+          console.log(`Submission ${i} data:`, submission)
+          console.log(`Submission ${i} submitter:`, submission.submitter)
+          console.log(`Current address:`, address)
+          
+          // Check if this submission belongs to the current user
+          if (submission && submission.submitter && submission.submitter.toLowerCase() === address.toLowerCase()) {
             const submissionData: SubmissionWithReviews = {
               id: i,
               submitter: submission.submitter as `0x${string}`,
-              contractId: submission.contractId as `0x${string}`,
+              contractAddress: submission.contractAddress as `0x${string}`,
               walrusBlobId: submission.walrusBlobId,
               hypergraphId: submission.hypergraphId,
               submissionTime: Number(submission.submissionTime) * 1000,
@@ -112,7 +118,7 @@ function MySubmissionsListContent() {
               negativeReviews: Number(submission.negativeReviews || 0),
               reliabilityScore: Number(reliabilityScore || 0),
               reviews: (reviews?.[0] || []).map((reviewId: bigint) => ({
-                reviewer: '0x0000000000000000000000000000000000000000' as `0x${string}`,
+                reviewer: '0x0000000000000000000000000000000000000000000000000000000000000000' as `0x${string}`,
                 isApproved: false,
                 comment: 'Review data not loaded',
                 reviewTime: Date.now()
@@ -236,22 +242,43 @@ function MySubmissionsListContent() {
           ) : (
             <div className="space-y-4">
               {mySubmissions.map((submission) => (
-                <div key={submission.id} className="border rounded-lg p-4">
+                <div key={submission.id} className="border-2 border-gray-200 rounded-lg p-6 hover:border-blue-300 transition-colors">
                   <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium">Contract: {submission.contractId}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Submitted by: {submission.submitter}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Walrus Blob ID: {submission.walrusBlobId}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Hypergraph ID: {submission.hypergraphId}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Submitted: {new Date(submission.submissionTime).toLocaleDateString()}
-                      </p>
+                    <div className="space-y-3">
+                      <div className="border-l-4 border-blue-500 pl-3">
+                        <h3 className="font-semibold text-lg">Contract Address</h3>
+                        <p className="text-sm font-mono text-gray-700 break-all">
+                          {submission.contractAddress}
+                        </p>
+                      </div>
+                      
+                      <div className="border-l-4 border-green-500 pl-3">
+                        <h4 className="font-medium text-gray-800">Submitted by</h4>
+                        <p className="text-sm font-mono text-gray-700">
+                          {submission.submitter}
+                        </p>
+                      </div>
+                      
+                      <div className="border-l-4 border-purple-500 pl-3">
+                        <h4 className="font-medium text-gray-800">Walrus Blob ID</h4>
+                        <p className="text-sm font-mono text-gray-700 break-all">
+                          {submission.walrusBlobId}
+                        </p>
+                      </div>
+                      
+                      <div className="border-l-4 border-orange-500 pl-3">
+                        <h4 className="font-medium text-gray-800">Hypergraph ID</h4>
+                        <p className="text-sm font-mono text-gray-700 break-all">
+                          {submission.hypergraphId}
+                        </p>
+                      </div>
+                      
+                      <div className="border-l-4 border-indigo-500 pl-3">
+                        <h4 className="font-medium text-gray-800">Submitted</h4>
+                        <p className="text-sm text-gray-700">
+                          {new Date(submission.submissionTime).toLocaleDateString()}
+                        </p>
+                      </div>
                       
                       {/* Review Statistics with Colors */}
                       <div className="flex items-center space-x-4 mt-2">
@@ -356,7 +383,7 @@ function SubmissionDetailsModal({ submission, onClose }: SubmissionDetailsModalP
             <div>
               <h4 className="font-medium mb-2">Contract Address</h4>
               <p className="text-sm text-muted-foreground break-all">
-                {submission.contractId}
+                {submission.contractAddress}
               </p>
             </div>
             <div>
