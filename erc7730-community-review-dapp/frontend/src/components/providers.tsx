@@ -40,6 +40,10 @@ const { chains, publicClient, webSocketPublicClient } = configureChains(
   [publicProvider()]
 )
 
+// Ensure chains are properly configured and available
+const availableChains = chains || [flowTestnetChain]
+console.log('🔧 Providers: Configured chains:', availableChains.map(c => ({ id: c.id, name: c.name, network: c.network })))
+
 // Debug logging
 console.log('Wagmi config:', {
   chains: chains.map(c => ({ id: c.id, name: c.name })),
@@ -50,14 +54,14 @@ const config = createConfig({
   autoConnect: true,
   connectors: [
     new MetaMaskConnector({ 
-      chains,
+      chains: availableChains,
       options: {
         shimDisconnect: true,
         UNSTABLE_shimOnConnectSelectAccount: true,
       }
     }),
     new InjectedConnector({
-      chains,
+      chains: availableChains,
       options: {
         name: 'Injected',
         shimDisconnect: true,
@@ -67,6 +71,10 @@ const config = createConfig({
   publicClient,
   webSocketPublicClient,
 })
+
+// Debug the final config
+console.log('🔧 Providers: Final config chains:', config.chains?.map(c => ({ id: c.id, name: c.name })) || 'UNDEFINED')
+console.log('🔧 Providers: Final config connectors:', config.connectors?.map(c => ({ id: c.id, name: c.name })) || 'UNDEFINED')
 
 // Debug config
 console.log('🔧 Providers: Wagmi config created:', {
