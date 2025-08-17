@@ -24,7 +24,8 @@ export interface SubmissionWithReviews extends Submission {
 }
 
 export interface ContractMetadata {
-  contractId: string
+  contractId: `0x${string}`
+  submitter: `0x${string}`
   walrusBlobId: string
   hypergraphId: string
   reliabilityScore: number

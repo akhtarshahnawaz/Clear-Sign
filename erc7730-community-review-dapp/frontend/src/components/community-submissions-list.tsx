@@ -100,8 +100,8 @@ function CommunitySubmissionsListContent() {
           if (submission && submission.submitter.toLowerCase() !== address.toLowerCase()) {
             const submissionData: SubmissionWithReviews = {
               id: i,
-              submitter: submission.submitter,
-              contractId: submission.contractId,
+              submitter: submission.submitter as `0x${string}`,
+              contractId: submission.contractId as `0x${string}`,
               walrusBlobId: submission.walrusBlobId,
               hypergraphId: submission.hypergraphId,
               submissionTime: Number(submission.submissionTime) * 1000,
@@ -111,7 +111,7 @@ function CommunitySubmissionsListContent() {
               negativeReviews: Number(submission.negativeReviews || 0),
               reliabilityScore: Number(reliabilityScore || 0),
               reviews: (reviews?.[0] || []).map((reviewId: bigint) => ({
-                reviewer: '0x0000000000000000000000000000000000000000',
+                reviewer: '0x0000000000000000000000000000000000000000' as `0x${string}`,
                 isApproved: false,
                 comment: 'Review data not loaded',
                 reviewTime: Date.now()
@@ -138,10 +138,10 @@ function CommunitySubmissionsListContent() {
 
   // Fetch submissions when totalSubmissions or address changes
   useEffect(() => {
-    if (totalSubmissions && publicClient && address) {
+    if (totalSubmissions && publicClient && address && isConnected) {
       fetchCommunitySubmissions()
     }
-  }, [totalSubmissions, publicClient, address, fetchCommunitySubmissions])
+  }, [totalSubmissions, publicClient, address, isConnected, fetchCommunitySubmissions])
 
   const handleViewSubmission = (submission: SubmissionWithReviews) => {
     setSelectedSubmission(submission)
@@ -225,9 +225,9 @@ function CommunitySubmissionsListContent() {
                 <div key={submission.id} className="border rounded-lg p-4">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="font-medium">Contract: {formatAddress(submission.contractId)}</h3>
+                      <h3 className="font-medium">Contract: {submission.contractId}</h3>
                       <p className="text-sm text-muted-foreground">
-                        Submitted by: {formatAddress(submission.submitter)}
+                        Submitted by: {submission.submitter}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         Walrus Blob ID: {submission.walrusBlobId}
@@ -236,14 +236,51 @@ function CommunitySubmissionsListContent() {
                         Hypergraph ID: {submission.hypergraphId}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Submitted: {formatDate(submission.submissionTime)}
+                        Submitted: {new Date(submission.submissionTime).toLocaleDateString()}
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        Reviews: {submission.totalReviews} (Positive: {submission.positiveReviews}, Negative: {submission.negativeReviews})
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Reliability Score: {submission.reliabilityScore.toFixed(2)}%
-                      </p>
+                      
+                      {/* Review Statistics with Colors */}
+                      <div className="flex items-center space-x-4 mt-2">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-medium">Reviews:</span>
+                          <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                            {submission.totalReviews}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-medium">Positive:</span>
+                          <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
+                            {submission.positiveReviews}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-medium">Negative:</span>
+                          <span className="text-sm bg-red-100 text-red-800 px-2 py-1 rounded">
+                            {submission.negativeReviews}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {/* Reliability Score Bar */}
+                      <div className="mt-2">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-medium">Reliability Score:</span>
+                          <span className="text-sm font-bold">
+                            {submission.reliabilityScore.toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                          <div 
+                            className={`h-2 rounded-full ${
+                              submission.reliabilityScore >= 80 ? 'bg-green-500' :
+                              submission.reliabilityScore >= 60 ? 'bg-yellow-500' :
+                              submission.reliabilityScore >= 40 ? 'bg-orange-500' :
+                              'bg-red-500'
+                            }`}
+                            style={{ width: `${submission.reliabilityScore}%` }}
+                          ></div>
+                        </div>
+                      </div>
                       {!submission.isActive && (
                         <p className="text-sm text-red-600 font-medium">
                           ⚠️ Submission inactive

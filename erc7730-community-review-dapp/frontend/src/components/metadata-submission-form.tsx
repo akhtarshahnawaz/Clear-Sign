@@ -123,21 +123,6 @@ export function MetadataSubmissionForm() {
         <CardDescription>
           Submit your ERC7730 metadata for community review. All fields are required.
         </CardDescription>
-        
-        {/* Contract status debugging */}
-        <div className="text-sm text-muted-foreground">
-          Contract Address: {CONTRACT_ADDRESS}
-          {contractError && (
-            <div className="text-red-500 mt-2">
-              Contract Error: {contractError.message}
-            </div>
-          )}
-          {totalSubmissions !== undefined && (
-            <div className="text-green-500 mt-2">
-              Total Submissions: {totalSubmissions.toString()}
-            </div>
-          )}
-        </div>
       </CardHeader>
       
       <CardContent>
@@ -217,6 +202,7 @@ export function MetadataSubmissionForm() {
             <Button
               type="submit"
               disabled={isLoading}
+              variant="outline"
               className="w-full"
             >
               {isLoading ? (

@@ -19,8 +19,8 @@ export function MetadataSearch() {
   
   const { refetch: refetchSubmission } = useGetSubmissionByContract(searchQuery)
   const { data: submissionId } = useGetSubmissionByContract(searchQuery)
-  const { data: submission } = useGetSubmission(submissionId || 0)
-  const { data: reliabilityScore } = useGetReliabilityScore(submissionId || 0)
+  const { data: submission } = useGetSubmission(Number(submissionId || 0))
+  const { data: reliabilityScore } = useGetReliabilityScore(Number(submissionId || 0))
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
@@ -41,14 +41,15 @@ export function MetadataSearch() {
         setTimeout(() => {
           if (submission && submission.submitter) {
             const metadata: ContractMetadata = {
-              contractId: submission.contractId,
+              contractId: submission.contractId as `0x${string}`,
+              submitter: submission.submitter as `0x${string}`,
               walrusBlobId: submission.walrusBlobId,
               hypergraphId: submission.hypergraphId,
-              reliabilityScore: reliabilityScore || 0,
-              totalReviews: submission.totalReviews,
-              positiveReviews: submission.positiveReviews,
-              negativeReviews: submission.negativeReviews,
-              submissionTime: submission.submissionTime
+              reliabilityScore: Number(reliabilityScore || 0),
+              totalReviews: Number(submission.totalReviews || 0),
+              positiveReviews: Number(submission.positiveReviews || 0),
+              negativeReviews: Number(submission.negativeReviews || 0),
+              submissionTime: Number(submission.submissionTime || 0)
             }
             setSearchResult(metadata)
           }
@@ -149,12 +150,22 @@ export function MetadataSearch() {
               <div>
                 <h4 className="font-medium mb-2 flex items-center">
                   <Calendar className="mr-2 h-4 w-4" />
-                  Submission Date
+                  Submitted By
                 </h4>
-                <p className="text-sm text-muted-foreground">
-                  {formatDate(searchResult.submissionTime)}
+                <p className="text-sm text-muted-foreground break-all font-mono">
+                  {searchResult.submitter}
                 </p>
               </div>
+            </div>
+
+            <div>
+              <h4 className="font-medium mb-2 flex items-center">
+                <Calendar className="mr-2 h-4 w-4" />
+                Submission Date
+              </h4>
+              <p className="text-sm text-muted-foreground">
+                {formatDate(searchResult.submissionTime)}
+              </p>
             </div>
 
             {/* Metadata IDs */}
@@ -214,9 +225,31 @@ export function MetadataSearch() {
                 
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                   <div className="text-2xl font-bold">
-                    {searchResult.reliabilityScore}%
+                    {searchResult.reliabilityScore.toFixed(1)}%
                   </div>
                   <div className="text-sm text-gray-700">Reliability Score</div>
+                </div>
+              </div>
+              
+              {/* Additional Review Statistics with Colors */}
+              <div className="mt-6 flex items-center justify-center space-x-6">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium">Total Reviews:</span>
+                  <span className="text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
+                    {searchResult.totalReviews}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium">Positive:</span>
+                  <span className="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full">
+                    {searchResult.positiveReviews}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium">Negative:</span>
+                  <span className="text-sm bg-red-100 text-red-800 px-3 py-1 rounded-full">
+                    {searchResult.negativeReviews}
+                  </span>
                 </div>
               </div>
               
@@ -235,6 +268,27 @@ export function MetadataSearch() {
                      searchResult.reliabilityScore >= 40 ? 'Medium Reliability' :
                      'Low Reliability'}
                   </span>
+                </div>
+              </div>
+              
+              {/* Reliability Score Bar */}
+              <div className="mt-4">
+                <div className="flex items-center justify-center space-x-2 mb-2">
+                  <span className="text-sm font-medium">Reliability Score:</span>
+                  <span className="text-sm font-bold">
+                    {searchResult.reliabilityScore.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="w-full max-w-md mx-auto bg-gray-200 rounded-full h-3">
+                  <div 
+                    className={`h-3 rounded-full transition-all duration-300 ${
+                      searchResult.reliabilityScore >= 80 ? 'bg-green-500' :
+                      searchResult.reliabilityScore >= 60 ? 'bg-yellow-500' :
+                      searchResult.reliabilityScore >= 40 ? 'bg-orange-500' :
+                      'bg-red-500'
+                    }`}
+                    style={{ width: `${searchResult.reliabilityScore}%` }}
+                  ></div>
                 </div>
               </div>
             </div>

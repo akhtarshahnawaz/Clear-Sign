@@ -7,8 +7,8 @@ import { Header } from '@/components/header'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'ERC7730 Community Review Dapp',
-  description: 'A decentralized application for community review of ERC7730 metadata',
+  title: 'ERC7730 Community Review',
+  description: 'Submit and review ERC7730 metadata for community validation',
 }
 
 export default function RootLayout({
@@ -18,6 +18,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>" />
+      </head>
       <body className={inter.className}>
         <Providers>
           <div className="min-h-screen bg-background">

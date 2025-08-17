@@ -3,7 +3,7 @@ import { CommunitySubmissionsList } from '@/components/community-submissions-lis
 export default function ReviewCommunityPage() {
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-8">Review Community Submissions</h1>
+      <h1 className="text-3xl font-bold mb-8 text-center">Review Community Submissions</h1>
       <CommunitySubmissionsList />
     </div>
   )
