@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ConnectButton } from './connect-button'
+import { Button } from './ui/button'
 import { cn } from '@/lib/utils'
 
 const navigation = [
@@ -10,6 +11,11 @@ const navigation = [
   { name: 'My Submissions', href: '/my-submissions' },
   { name: 'Review Community', href: '/review-community' },
   { name: 'Search', href: '/search' },
+  { 
+    name: 'Ledger ERC7730 Builder', 
+    href: 'https://get-clear-signed.ledger.com/',
+    external: true 
+  },
 ]
 
 export function Header() {
@@ -32,34 +38,40 @@ export function Header() {
 
             
             <nav className="flex space-x-6">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={cn(
-                    'text-sm font-medium transition-colors hover:text-primary',
-                    pathname === item.href
-                      ? 'text-primary'
-                      : 'text-muted-foreground'
-                  )}
-                >
-                  {item.name}
-                </Link>
-              ))}
+              {navigation.map((item) => {
+                if (item.external) {
+                  return (
+                    <a
+                      key={item.name}
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-medium transition-colors hover:text-primary border border-gray-300 rounded px-3 py-1.5 hover:border-gray-400"
+                    >
+                      {item.name}
+                    </a>
+                  )
+                }
+                
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={cn(
+                      'text-sm font-medium transition-colors hover:text-primary',
+                      pathname === item.href
+                        ? 'text-primary'
+                        : 'text-muted-foreground'
+                    )}
+                  >
+                    {item.name}
+                  </Link>
+                )
+              })}
             </nav>
           </div>
           
-          <div className="flex items-center space-x-4">
-            <a
-              href="https://get-clear-signed.ledger.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-800 transition-colors"
-            >
-              Ledger JSON Builder
-            </a>
-            <ConnectButton />
-          </div>
+          <ConnectButton />
         </div>
       </div>
     </header>

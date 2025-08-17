@@ -1,5 +1,19 @@
 # MetaProof: ERC7730 Community Review
 
+<p align="center">
+  Powered by<br>
+  <a href="https://ledger.com" target="_blank">
+    <img src="https://www.ledger.com/wp-content/themes/ledger-v2/public/images/ledger-logo-long.svg" alt="Product 1" width="50" />
+  </a>
+  <a href="https://flow.com" target="_blank">
+    <img src="https://cdn.prod.website-files.com/5f734f4dbd95382f4fdfa0ea/63ce603ae36f46f6bb67e51e_flow-logo.svg" alt="Product 2" width="50" />
+  </a>
+  <a href="https://walrus.xyz" target="_blank">
+    <img src="https://cdn.prod.website-files.com/6864f039b26f4afedada6bc5/6864f039b26f4afedada6c10_logo.svg" alt="Product 3" width="50" />
+  </a>
+</p>
+
+
 Blindly signing smart contract transactions is one of the biggest risks in web3. When users approve interactions without fully understanding the underlying contract, they expose themselves to malicious code, hidden permissions, or irreversible asset loss. A trusted metadata layer—what we call Clear-Sign—solves this problem by giving users transparent, standardized information about what they are actually signing before they commit.
 
 The challenge is that implementing Clear-Sign at scale requires a universal metadata standard, which ERC7730 introduces. However, ERC7730’s promise quickly runs into practical hurdles: millions of contracts exist, each with unique structures and evolving behaviors, making it nearly impossible for any single authority or automated tool to maintain accurate metadata. Without reliable, verified data, the standard risks being incomplete or misleading, which brings us back to the original problem.
