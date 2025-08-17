@@ -31,5 +31,5 @@ export const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
 export const IS_TEST = process.env.NODE_ENV === 'test'
 
 // Walrus Network Configuration
-export const WALRUS_PUBLISHER_BASE_URL = process.env.NEXT_PUBLIC_WALRUS_PUBLISHER_BASE_URL || "http://walrus-testnet-publisher.starduststaking.com"
+export const WALRUS_PUBLISHER_BASE_URL = process.env.NEXT_PUBLIC_WALRUS_PUBLISHER_BASE_URL || "https://walrus-testnet-publisher.starduststaking.com"
 export const WALRUS_AGGREGATOR_BASE_URL = process.env.NEXT_PUBLIC_WALRUS_AGGREGATOR_BASE_URL || "http://agg.test.walrus.eosusa.io"
