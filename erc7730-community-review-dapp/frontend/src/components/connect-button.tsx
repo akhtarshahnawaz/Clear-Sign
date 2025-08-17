@@ -3,6 +3,7 @@
 import { useAccount, useConnect, useDisconnect, useNetwork } from 'wagmi'
 import { Button } from './ui/button'
 import { Wallet, LogOut } from 'lucide-react'
+import { CHAIN_ID, RPC_URL, NETWORK_NAME, BLOCK_EXPLORER } from '@/lib/constants'
 
 export function ConnectButton() {
   const { address, isConnected } = useAccount()
@@ -20,26 +21,26 @@ export function ConnectButton() {
     pendingConnector
   })
 
-  // Function to add Anvil network to MetaMask
-  const addAnvilNetwork = async () => {
+  // Function to add Flow EVM Testnet to MetaMask
+  const addFlowTestnetNetwork = async () => {
     if (typeof window.ethereum !== 'undefined') {
       try {
         await window.ethereum.request({
           method: 'wallet_addEthereumChain',
           params: [{
-            chainId: '0x7A69', // 31337 in hex
-            chainName: 'Anvil',
+            chainId: `0x${CHAIN_ID.toString(16)}`, // Convert to hex
+            chainName: NETWORK_NAME,
             nativeCurrency: {
-              name: 'Ether',
-              symbol: 'ETH',
+              name: 'FLOW',
+              symbol: 'FLOW',
               decimals: 18,
             },
-            rpcUrls: ['http://127.0.0.1:8545'],
-            blockExplorerUrls: ['http://127.0.0.1:8545'],
+            rpcUrls: [RPC_URL],
+            blockExplorerUrls: [BLOCK_EXPLORER],
           }],
         })
       } catch (error) {
-        console.error('Failed to add Anvil network:', error)
+        console.error('Failed to add Flow EVM Testnet network:', error)
       }
     }
   }
@@ -55,14 +56,14 @@ export function ConnectButton() {
             {chain?.name || 'Unknown'} (ID: {chain?.id || 'Unknown'})
           </span>
         </div>
-        {chain?.id !== 31337 && (
+        {chain?.id !== CHAIN_ID && (
           <Button
             variant="outline"
             size="sm"
-            onClick={addAnvilNetwork}
+            onClick={addFlowTestnetNetwork}
             className="flex items-center space-x-2"
           >
-            <span>Switch to Anvil</span>
+            <span>Switch to {NETWORK_NAME}</span>
           </Button>
         )}
         <Button

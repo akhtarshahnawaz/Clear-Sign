@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useContract } from '@/hooks/use-contract'
 import { formatAddress, formatDate, calculateReliabilityScore } from '@/lib/utils'
+import { CONTRACT_ADDRESS } from '@/lib/constants'
 import { ContractMetadata } from '@/types'
 import { Search, FileText, Database, Calendar, ThumbsUp, ThumbsDown, CheckCircle, XCircle, Eye } from 'lucide-react'
 import { WalrusContentModal } from './walrus-content-modal'
@@ -35,7 +36,7 @@ export function MetadataSearch() {
     setIsLoadingReviews(true)
     try {
       const reviewsData = await publicClient.readContract({
-        address: '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9' as `0x${string}`,
+        address: CONTRACT_ADDRESS as `0x${string}`,
         abi: await import('@/lib/contract-abi').then(m => m.ERC7730COMMUNITYREVIEW_ABI),
         functionName: 'getSubmissionReviews',
         args: [BigInt(submissionId)],
@@ -46,7 +47,7 @@ export function MetadataSearch() {
         const reviewPromises = reviewIds.map(async (reviewId) => {
           try {
             const review = await publicClient.readContract({
-              address: '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9' as `0x${string}`,
+              address: CONTRACT_ADDRESS as `0x${string}`,
               abi: await import('@/lib/contract-abi').then(m => m.ERC7730COMMUNITYREVIEW_ABI),
               functionName: 'reviews',
               args: [BigInt(submissionId), reviewId],

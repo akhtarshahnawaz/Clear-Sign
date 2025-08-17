@@ -15,6 +15,8 @@ contract DeployScript is Script {
         
         console.log("ERC7730CommunityReview deployed at:", address(reviewContract));
         console.log("Deployer:", deployer);
+        console.log("Network: Flow EVM Testnet (Chain ID: 545)");
+        console.log("Block Explorer: https://evm-testnet.flowscan.io");
         
         vm.stopBroadcast();
     }

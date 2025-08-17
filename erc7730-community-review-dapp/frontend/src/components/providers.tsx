@@ -1,34 +1,34 @@
 'use client'
 
 import { WagmiConfig, createConfig, configureChains } from 'wagmi'
-import { mainnet, sepolia, localhost } from 'wagmi/chains'
 import { publicProvider } from 'wagmi/providers/public'
 import { MetaMaskConnector } from 'wagmi/connectors/metaMask'
 import { InjectedConnector } from 'wagmi/connectors/injected'
 import { Chain } from 'wagmi'
+import { RPC_URL, CHAIN_ID, NETWORK_NAME, BLOCK_EXPLORER } from '@/lib/constants'
 
-// Custom Anvil chain configuration
-const anvilChain: Chain = {
-  id: 31337,
-  name: 'Anvil',
-  network: 'anvil',
+// Custom Flow EVM Testnet chain configuration
+const flowTestnetChain: Chain = {
+  id: CHAIN_ID,
+  name: NETWORK_NAME,
+  network: 'flow-testnet',
   nativeCurrency: {
     decimals: 18,
-    name: 'Ether',
-    symbol: 'ETH',
+    name: 'FLOW',
+    symbol: 'FLOW',
   },
   rpcUrls: {
-    default: { http: ['http://127.0.0.1:8545'] },
-    public: { http: ['http://127.0.0.1:8545'] },
+    default: { http: [RPC_URL] },
+    public: { http: [RPC_URL] },
   },
   blockExplorers: {
-    default: { name: 'Anvil', url: 'http://127.0.0.1:8545' },
+    default: { name: NETWORK_NAME, url: BLOCK_EXPLORER },
   },
 }
 
-// Configure chains with Anvil as the default
+// Configure chains with Flow EVM Testnet as the default
 const { chains, publicClient, webSocketPublicClient } = configureChains(
-  [anvilChain, sepolia, mainnet], // Anvil first for priority
+  [flowTestnetChain], // Only Flow EVM Testnet
   [publicProvider()]
 )
 
