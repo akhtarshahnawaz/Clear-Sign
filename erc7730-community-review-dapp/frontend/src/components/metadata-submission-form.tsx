@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAccount } from 'wagmi'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,14 +10,18 @@ import { useContract } from '@/hooks/use-contract'
 import { WALRUS_PUBLISHER_BASE_URL } from '@/lib/constants'
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 
-export function MetadataSubmissionForm() {
+interface MetadataSubmissionFormProps {
+  initialJsonData?: string | null
+}
+
+export function MetadataSubmissionForm({ initialJsonData }: MetadataSubmissionFormProps) {
   const { address, isConnected } = useAccount()
   const { useSubmitMetadata, useTestContractAccess } = useContract()
   
   // Test contract access
   const { data: totalSubmissions, error: contractError } = useTestContractAccess()
   
-  const [jsonInput, setJsonInput] = useState('')
+  const [jsonInput, setJsonInput] = useState(initialJsonData || '')
   const [isProcessing, setIsProcessing] = useState(false)
   const [processingStep, setProcessingStep] = useState<string>('')
   const [extractedData, setExtractedData] = useState<{
@@ -28,6 +32,24 @@ export function MetadataSubmissionForm() {
   const [showSubmitPrompt, setShowSubmitPrompt] = useState(false)
   
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [dataLoadedFromPost, setDataLoadedFromPost] = useState(false)
+
+  // Handle initialJsonData changes
+  useEffect(() => {
+    console.log('📝 MetadataSubmissionForm: initialJsonData received:', initialJsonData ? 'Yes' : 'No')
+    if (initialJsonData && initialJsonData !== jsonInput) {
+      console.log('✅ MetadataSubmissionForm: Setting JSON input with received data')
+      setJsonInput(initialJsonData)
+      setDataLoadedFromPost(true)
+      // Clear any existing errors when new data is loaded
+      if (errors.jsonInput) {
+        setErrors(prev => ({ ...prev, jsonInput: '' }))
+      }
+      
+      // Clear the notification after 5 seconds
+      setTimeout(() => setDataLoadedFromPost(false), 5000)
+    }
+  }, [initialJsonData, jsonInput, errors.jsonInput])
   
   const { submit, isLoading, isSuccess, error, hash } = useSubmitMetadata(
     extractedData?.contractAddress as `0x${string}`,
@@ -175,6 +197,18 @@ export function MetadataSubmissionForm() {
       </CardHeader>
       
       <CardContent>
+        {/* Notification for data loaded from POST request */}
+        {dataLoadedFromPost && (
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <div className="flex items-center space-x-2 text-blue-700">
+              <CheckCircle className="h-4 w-4" />
+              <span className="text-sm font-medium">
+                JSON data loaded from POST request. You can now process and submit it for review.
+              </span>
+            </div>
+          </div>
+        )}
+        
         {isSuccess ? (
           <div className="space-y-4">
             <div className="flex items-center space-x-2 text-green-600">

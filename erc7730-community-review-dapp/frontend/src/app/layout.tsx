@@ -7,7 +7,7 @@ import { Header } from '@/components/header'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'ERC7730 Community Review',
+  title: 'MetaProof: ERC7730 Community Review',
   description: 'Submit and review ERC7730 metadata for community validation',
 }
 

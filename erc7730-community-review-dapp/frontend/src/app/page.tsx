@@ -1,4 +1,5 @@
 import { MetadataSubmissionForm } from '@/components/metadata-submission-form'
+import { PostDataHandler } from '@/components/post-data-handler'
 
 export default function HomePage() {
   return (
@@ -13,7 +14,9 @@ export default function HomePage() {
         </p>
       </div>
       
-      <MetadataSubmissionForm />
+      <PostDataHandler>
+        <MetadataSubmissionForm />
+      </PostDataHandler>
     </div>
   )
 }

@@ -245,6 +245,37 @@ The app supports:
 - Automatic network switching
 - Network addition prompts
 
+### POST Request Support
+
+The homepage can accept data to pre-populate the metadata form through multiple methods:
+
+#### **Method 1: API Endpoint (POST)**
+**API Endpoint:** `POST /api/submit`
+
+**Request Body:**
+```json
+{
+  "erc7730-metadata-json": "{\"context\":{\"contract\":{\"deployments\":[{\"address\":\"0x1234...\"}]}}}"
+}
+```
+
+#### **Method 2: localStorage Integration**
+**For Clear-Signing Builder Integration:**
+1. Store JSON data in localStorage with key `erc7730-metadata-json`
+2. Redirect user to the homepage
+3. The DApp automatically reads from localStorage and populates the form
+
+**How it works:**
+1. Data is provided via POST request or localStorage
+2. The form automatically populates with the provided JSON data
+3. Users can then process and submit the metadata for review
+
+**Use cases:**
+- Integration with external tools (Clear-Signing Builder)
+- Pre-filling forms from other applications
+- Batch processing workflows
+- Cross-application data sharing
+
 ## 🏗️ Project Structure
 
 ```
@@ -281,6 +312,7 @@ erc7730-community-review-dapp/
 - **Real-time Updates:** Live blockchain data
 - **Error Handling:** Comprehensive error management
 - **Testing:** Full test coverage for contracts
+- **POST Request Support:** Accept JSON data via POST requests to populate the form
 
 ## 🔧 Troubleshooting
 
