@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { useContract } from '@/hooks/use-contract'
-import { WALRUS_PUBLISHER_BASE_URL } from '@/lib/constants'
+
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 
 interface MetadataSubmissionFormProps {
@@ -102,12 +102,12 @@ export function MetadataSubmissionForm({ initialJsonData }: MetadataSubmissionFo
         throw new Error('Invalid contract address format in JSON')
       }
       
-      // Step 2: Publish to Walrus
+      // Step 2: Publish to Walrus via our API proxy
       setProcessingStep('Publishing JSON to Walrus network...')
-      const walrusResponse = await fetch(`${WALRUS_PUBLISHER_BASE_URL}/v1/blobs`, {
+      const walrusResponse = await fetch('/api/walrus/publish', {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'text/plain',
         },
         body: jsonInput
       })

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { WALRUS_AGGREGATOR_BASE_URL } from '@/lib/constants'
+
 import { Eye, X, Download, RefreshCw } from 'lucide-react'
 
 interface WalrusContentModalProps {
@@ -31,7 +31,7 @@ export function WalrusContentModal({ isOpen, onClose, blobId, title }: WalrusCon
     setError(null)
     
     try {
-      const response = await fetch(`${WALRUS_AGGREGATOR_BASE_URL}/v1/blobs/${blobId}`)
+      const response = await fetch(`/api/walrus/retrieve?blobId=${blobId}`)
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
