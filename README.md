@@ -44,8 +44,10 @@ From a UX perspective, I really enjoyed the dark, high-contrast UI—it makes re
 Overall, I think the documentation is already strong, and its clarity makes ERC-7730 approachable even for new developers. With just a few additions—especially around setup guides, package usage, and versioning—it could become a best-in-class resource that accelerates adoption of transparent transaction signing in the Ethereum ecosystem.
 
 # Flow Deployment Addresses
-The solidity backend is deployed on Flow Testnet at deployment address: 0x433cb904fe95132a405925c35101b771bf3ba5ad
-Deployment Transaction: https://evm-testnet.flowscan.io/tx/0x75bf64a54a539dd5d3c84261a64e3491f2dcd72cdd421fafd4f0303c24d7b046
+The solidity backend is deployed on Flow Testnet
+
+1. **Deployment Address:** 0x433cb904fe95132a405925c35101b771bf3ba5ad
+2. **Deployment Transaction:** https://evm-testnet.flowscan.io/tx/0x75bf64a54a539dd5d3c84261a64e3491f2dcd72cdd421fafd4f0303c24d7b046
 
 # 🏗️ Project Structure
 
