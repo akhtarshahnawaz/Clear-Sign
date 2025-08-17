@@ -49,7 +49,17 @@ export function Header() {
             </nav>
           </div>
           
-          <ConnectButton />
+          <div className="flex items-center space-x-4">
+            <a
+              href="https://get-clear-signed.ledger.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-800 transition-colors"
+            >
+              Ledger JSON Builder
+            </a>
+            <ConnectButton />
+          </div>
         </div>
       </div>
     </header>
