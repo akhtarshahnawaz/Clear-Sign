@@ -5,8 +5,9 @@ import { useAccount } from 'wagmi'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Textarea } from '@/components/ui/textarea'
 import { useContract } from '@/hooks/use-contract'
-import { MIN_BLOB_ID_LENGTH, MIN_HYPERGRAPH_ID_LENGTH, CONTRACT_ADDRESS } from '@/lib/constants'
+import { WALRUS_PUBLISHER_BASE_URL } from '@/lib/constants'
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 
 export function MetadataSubmissionForm() {
@@ -16,64 +17,114 @@ export function MetadataSubmissionForm() {
   // Test contract access
   const { data: totalSubmissions, error: contractError } = useTestContractAccess()
   
-  const [formData, setFormData] = useState({
-    contractAddress: '',
-    walrusBlobId: '',
-    hypergraphId: ''
-  })
+  const [jsonInput, setJsonInput] = useState('')
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [processingStep, setProcessingStep] = useState<string>('')
+  const [extractedData, setExtractedData] = useState<{
+    contractAddress: string
+    walrusBlobId: string
+    hypergraphId: string
+  } | null>(null)
+  const [showSubmitPrompt, setShowSubmitPrompt] = useState(false)
   
   const [errors, setErrors] = useState<Record<string, string>>({})
   
   const { submit, isLoading, isSuccess, error, hash } = useSubmitMetadata(
-    formData.contractAddress as `0x${string}`,
-    formData.walrusBlobId,
-    formData.hypergraphId
+    extractedData?.contractAddress as `0x${string}`,
+    extractedData?.walrusBlobId || '',
+    extractedData?.hypergraphId || ''
   )
 
-  const validateForm = () => {
+  const validateJsonInput = () => {
     const newErrors: Record<string, string> = {}
     
-    if (!formData.contractAddress) {
-      newErrors.contractAddress = 'Contract Address is required'
-    } else if (!formData.contractAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
-      newErrors.contractAddress = 'Contract Address must be a valid Ethereum address'
-    }
-    
-    if (!formData.walrusBlobId) {
-      newErrors.walrusBlobId = 'Walrus Blob ID is required'
-    } else if (formData.walrusBlobId.length < MIN_BLOB_ID_LENGTH) {
-      newErrors.walrusBlobId = `Walrus Blob ID must be at least ${MIN_BLOB_ID_LENGTH} characters`
-    }
-    
-    if (!formData.hypergraphId) {
-      newErrors.hypergraphId = 'Hypergraph ID is required'
-    } else if (formData.hypergraphId.length < MIN_HYPERGRAPH_ID_LENGTH) {
-      newErrors.hypergraphId = `Hypergraph ID must be at least ${MIN_HYPERGRAPH_ID_LENGTH} characters`
+    if (!jsonInput.trim()) {
+      newErrors.jsonInput = 'JSON input is required'
+    } else {
+      try {
+        JSON.parse(jsonInput)
+      } catch (err) {
+        newErrors.jsonInput = 'Invalid JSON format'
+      }
     }
     
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+  const processJsonAndPublish = async () => {
     if (!isConnected) {
       alert('Please connect your wallet first')
       return
     }
     
-    if (!validateForm()) {
+    if (!validateJsonInput()) {
       return
     }
     
-    // Debug logging
-    console.log('Submitting metadata with:', {
-      contractAddress: formData.contractAddress,
-      walrusBlobId: formData.walrusBlobId,
-      hypergraphId: formData.hypergraphId,
-      address: address
-    })
+    setIsProcessing(true)
+    setErrors({})
+    
+    try {
+      // Step 1: Parse JSON and extract contract address
+      setProcessingStep('Parsing JSON and extracting contract address...')
+      const jsonData = JSON.parse(jsonInput)
+      
+      // Extract contract address from deployments
+      const contractAddress = jsonData?.context?.contract?.deployments?.[0]?.address
+      if (!contractAddress) {
+        throw new Error('No contract address found in JSON deployments')
+      }
+      
+      if (!contractAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
+        throw new Error('Invalid contract address format in JSON')
+      }
+      
+      // Step 2: Publish to Walrus
+      setProcessingStep('Publishing JSON to Walrus network...')
+      const walrusResponse = await fetch(`${WALRUS_PUBLISHER_BASE_URL}/v1/blobs`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonInput
+      })
+      
+      if (!walrusResponse.ok) {
+        throw new Error(`Failed to publish to Walrus: ${walrusResponse.status}`)
+      }
+      
+      const walrusData = await walrusResponse.json()
+      const blobId = walrusData?.newlyCreated?.blobObject?.blobId || walrusData?.alreadyCertified?.blobId
+      
+      if (!blobId) {
+        throw new Error('Failed to get blob ID from Walrus response')
+      }
+      
+      // Step 3: Set extracted data
+      setProcessingStep('Preparing submission data...')
+      const extracted = {
+        contractAddress,
+        walrusBlobId: blobId,
+        hypergraphId: blobId // Using same blob ID for hypergraph as requested
+      }
+      
+      setExtractedData(extracted)
+      setShowSubmitPrompt(true)
+      
+      console.log('Successfully processed JSON:', extracted)
+      
+    } catch (err: any) {
+      console.error('Processing error:', err)
+      setErrors({ jsonInput: err.message || 'Failed to process JSON' })
+    } finally {
+      setIsProcessing(false)
+      setProcessingStep('')
+    }
+  }
+
+  const handleSubmitForReview = async () => {
+    if (!extractedData) return
     
     try {
       await submit?.()
@@ -82,19 +133,17 @@ export function MetadataSubmissionForm() {
     }
   }
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }))
+  const handleInputChange = (value: string) => {
+    setJsonInput(value)
+    if (errors.jsonInput) {
+      setErrors(prev => ({ ...prev, jsonInput: '' }))
     }
   }
 
   const resetForm = () => {
-    setFormData({
-      contractAddress: '',
-      walrusBlobId: '',
-      hypergraphId: ''
-    })
+    setJsonInput('')
+    setExtractedData(null)
+    setShowSubmitPrompt(false)
     setErrors({})
   }
 
@@ -121,7 +170,7 @@ export function MetadataSubmissionForm() {
       <CardHeader>
         <CardTitle>Submit Metadata for Review</CardTitle>
         <CardDescription>
-          Submit your ERC7730 metadata for community review. All fields are required.
+          Paste your ERC7730 metadata JSON and we'll automatically extract the contract address and publish to Walrus for community review.
         </CardDescription>
       </CardHeader>
       
@@ -139,57 +188,52 @@ export function MetadataSubmissionForm() {
               Submit Another
             </Button>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <label htmlFor="contractAddress" className="text-sm font-medium">
-                Contract Address *
-              </label>
-              <Input
-                id="contractAddress"
-                type="text"
-                placeholder="0x1234567890123456789012345678901234567890"
-                value={formData.contractAddress}
-                onChange={(e) => handleInputChange('contractAddress', e.target.value)}
-                className={errors.contractAddress ? 'border-destructive' : ''}
-              />
-              {errors.contractAddress && (
-                <p className="text-sm text-destructive">{errors.contractAddress}</p>
-              )}
+        ) : showSubmitPrompt ? (
+          <div className="space-y-6">
+            {/* Show extracted data for confirmation */}
+            <div className="space-y-4">
+              <h4 className="font-medium text-lg">Extracted Data</h4>
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Contract Address</label>
+                  <p className="text-sm font-mono bg-gray-100 p-2 rounded mt-1 break-all">
+                    {extractedData?.contractAddress}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Walrus Blob ID</label>
+                  <p className="text-sm font-mono bg-gray-100 p-2 rounded mt-1 break-all">
+                    {extractedData?.walrusBlobId}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Hypergraph ID</label>
+                  <p className="text-sm font-mono bg-gray-100 p-2 rounded mt-1 break-all">
+                    {extractedData?.walrusBlobId}
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="walrusBlobId" className="text-sm font-medium">
-                Walrus Blob ID *
-              </label>
-              <Input
-                id="walrusBlobId"
-                type="text"
-                placeholder="vtrj4hZwDbqha2sCDBtJryloe8AqCD-Rq_C_TyNXBE4"
-                value={formData.walrusBlobId}
-                onChange={(e) => handleInputChange('walrusBlobId', e.target.value)}
-                className={errors.walrusBlobId ? 'border-destructive' : ''}
-              />
-              {errors.walrusBlobId && (
-                <p className="text-sm text-destructive">{errors.walrusBlobId}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="hypergraphId" className="text-sm font-medium">
-                Hypergraph ID *
-              </label>
-              <Input
-                id="hypergraphId"
-                type="text"
-                placeholder="QmHash123456789012345678901234567890123456789"
-                value={formData.hypergraphId}
-                onChange={(e) => handleInputChange('hypergraphId', e.target.value)}
-                className={errors.hypergraphId ? 'border-destructive' : ''}
-              />
-              {errors.hypergraphId && (
-                <p className="text-sm text-destructive">{errors.hypergraphId}</p>
-              )}
+            <div className="text-center">
+              <p className="text-sm text-gray-600 mb-4">
+                Ready to submit this metadata for community review?
+              </p>
+              <div className="flex space-x-3 justify-center">
+                <Button onClick={() => setShowSubmitPrompt(false)} variant="outline">
+                  Edit JSON
+                </Button>
+                <Button onClick={handleSubmitForReview} disabled={isLoading} className="bg-blue-600 hover:bg-blue-700">
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    'Submit for Review'
+                  )}
+                </Button>
+              </div>
             </div>
 
             {(error || contractError) && (
@@ -200,23 +244,60 @@ export function MetadataSubmissionForm() {
                 </span>
               </div>
             )}
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <label htmlFor="jsonInput" className="text-sm font-medium">
+                ERC7730 Metadata JSON *
+              </label>
+              <Textarea
+                id="jsonInput"
+                placeholder="Paste your ERC7730 metadata JSON here..."
+                value={jsonInput}
+                onChange={(e) => handleInputChange(e.target.value)}
+                className={`font-mono text-sm h-64 ${
+                  errors.jsonInput ? 'border-destructive' : ''
+                }`}
+              />
+              {errors.jsonInput && (
+                <p className="text-sm text-destructive">{errors.jsonInput}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                The JSON should contain contract deployment information and metadata. 
+                We'll automatically extract the contract address and publish to Walrus.
+              </p>
+            </div>
+
+            {/* Processing Progress */}
+            {isProcessing && (
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2 text-blue-600">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm font-medium">{processingStep}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '100%' }}></div>
+                </div>
+              </div>
+            )}
 
             <Button
-              type="submit"
-              disabled={isLoading}
+              onClick={processJsonAndPublish}
+              disabled={isProcessing || !jsonInput.trim()}
               variant="outline"
               className="w-full"
             >
-              {isLoading ? (
+              {isProcessing ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
+                  Processing...
                 </>
               ) : (
-                'Submit for Review'
+                'Process JSON & Publish to Walrus'
               )}
             </Button>
-          </form>
+          </div>
         )}
       </CardContent>
     </Card>
