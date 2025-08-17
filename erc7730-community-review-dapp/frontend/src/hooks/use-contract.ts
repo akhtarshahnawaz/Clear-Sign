@@ -123,21 +123,24 @@ export function useContract() {
     }
 
     const { data, write, isLoading, error } = useContractWrite(config)
-    const { isLoading: isPending, isSuccess } = useWaitForTransaction({
+    const { isLoading: isPending, isSuccess, error: transactionError } = useWaitForTransaction({
       hash: data?.hash,
     })
+
+    // Combine prepare errors and transaction errors
+    const combinedError = prepareError || error || transactionError
 
     return {
       submit: write,
       isLoading: isLoading || isPending,
       isSuccess,
-      error,
+      error: combinedError,
       hash: data?.hash,
     }
   }
 
   const useSubmitReview = (submissionId: number, isApproved: boolean, comment: string) => {
-    const { config } = usePrepareContractWrite({
+    const { config, error: prepareError } = usePrepareContractWrite({
       address: contractAddress,
       abi: ERC7730COMMUNITYREVIEW_ABI,
       functionName: 'submitReview',
@@ -146,15 +149,18 @@ export function useContract() {
     })
 
     const { data, write, isLoading, error } = useContractWrite(config)
-    const { isLoading: isPending, isSuccess } = useWaitForTransaction({
+    const { isLoading: isPending, isSuccess, error: transactionError } = useWaitForTransaction({
       hash: data?.hash,
     })
+
+    // Combine prepare errors and transaction errors
+    const combinedError = prepareError || error || transactionError
 
     return {
       submit: write,
       isLoading: isLoading || isPending,
       isSuccess,
-      error,
+      error: combinedError,
       hash: data?.hash,
     }
   }

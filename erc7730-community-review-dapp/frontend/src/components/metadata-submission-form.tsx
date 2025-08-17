@@ -192,10 +192,12 @@ export function MetadataSubmissionForm() {
               )}
             </div>
 
-            {error && (
-              <div className="flex items-center space-x-2 text-destructive">
+            {(error || contractError) && (
+              <div className="flex items-center space-x-2 text-destructive bg-red-50 p-3 rounded-md">
                 <AlertCircle className="h-4 w-4" />
-                <span className="text-sm">Error: {error.message}</span>
+                <span className="text-sm">
+                  {error?.message || contractError?.message || 'Unknown error occurred'}
+                </span>
               </div>
             )}
 

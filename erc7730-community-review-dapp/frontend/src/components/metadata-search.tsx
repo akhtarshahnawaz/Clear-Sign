@@ -9,9 +9,11 @@ import { formatAddress, formatDate, calculateReliabilityScore } from '@/lib/util
 import { ContractMetadata } from '@/types'
 import { Search, FileText, Database, Calendar, ThumbsUp, ThumbsDown, CheckCircle, XCircle, Eye } from 'lucide-react'
 import { WalrusContentModal } from './walrus-content-modal'
+import { usePublicClient } from 'wagmi'
 
 export function MetadataSearch() {
   const { useGetSubmissionByContract, useGetSubmission, useGetReliabilityScore } = useContract()
+  const publicClient = usePublicClient()
   
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResult, setSearchResult] = useState<ContractMetadata | null>(null)
@@ -19,21 +21,72 @@ export function MetadataSearch() {
   const [error, setError] = useState<string | null>(null)
   const [walrusModalOpen, setWalrusModalOpen] = useState(false)
   const [selectedBlobId, setSelectedBlobId] = useState<string>('')
+  const [reviews, setReviews] = useState<any[]>([])
+  const [isLoadingReviews, setIsLoadingReviews] = useState(false)
   
   const { refetch: refetchSubmission } = useGetSubmissionByContract(searchQuery as `0x${string}`)
   const { data: submissionId } = useGetSubmissionByContract(searchQuery as `0x${string}`)
   const { data: submission } = useGetSubmission(Number(submissionId || 0))
   const { data: reliabilityScore } = useGetReliabilityScore(Number(submissionId || 0))
 
-  const handleSearch = async () => {
-          if (!searchQuery.trim()) {
-        setError('Please enter a contract address to search')
-        return
+  const fetchReviews = async (submissionId: number) => {
+    if (!submissionId || !publicClient) return
+    
+    setIsLoadingReviews(true)
+    try {
+      const reviewsData = await publicClient.readContract({
+        address: '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9' as `0x${string}`,
+        abi: await import('@/lib/contract-abi').then(m => m.ERC7730COMMUNITYREVIEW_ABI),
+        functionName: 'getSubmissionReviews',
+        args: [BigInt(submissionId)],
+      })
+      
+      if (reviewsData && reviewsData[0]) {
+        const reviewIds = reviewsData[0] as bigint[]
+        const reviewPromises = reviewIds.map(async (reviewId) => {
+          try {
+            const review = await publicClient.readContract({
+              address: '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9' as `0x${string}`,
+              abi: await import('@/lib/contract-abi').then(m => m.ERC7730COMMUNITYREVIEW_ABI),
+              functionName: 'reviews',
+              args: [BigInt(submissionId), reviewId],
+            })
+            return {
+              id: Number(reviewId),
+              reviewer: review[0],
+              isApproved: review[1],
+              comment: review[2],
+              reviewTime: Number(review[3])
+            }
+          } catch (err) {
+            console.error('Error fetching review:', err)
+            return null
+          }
+        })
+        
+        const reviewResults = await Promise.all(reviewPromises)
+        setReviews(reviewResults.filter(Boolean))
+      } else {
+        setReviews([])
       }
+    } catch (err) {
+      console.error('Error fetching reviews:', err)
+      setReviews([])
+    } finally {
+      setIsLoadingReviews(false)
+    }
+  }
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      setError('Please enter a contract address to search')
+      return
+    }
     
     setIsSearching(true)
     setError(null)
     setSearchResult(null)
+    setReviews([])
     
     try {
       // Trigger the contract read
@@ -41,7 +94,7 @@ export function MetadataSearch() {
       
       if (result.data && result.data > 0) {
         // Wait a bit for the data to be fetched
-        setTimeout(() => {
+        setTimeout(async () => {
           if (submission && submission.submitter) {
             const metadata: ContractMetadata = {
               contractAddress: submission.contractAddress as `0x${string}`,
@@ -55,6 +108,9 @@ export function MetadataSearch() {
               submissionTime: Number(submission.submissionTime || 0)
             }
             setSearchResult(metadata)
+            
+            // Fetch reviews for this submission
+            await fetchReviews(Number(submissionId))
           }
         }, 500)
       } else {
@@ -78,6 +134,7 @@ export function MetadataSearch() {
     setSearchQuery('')
     setSearchResult(null)
     setError(null)
+    setReviews([])
   }
 
   return (
@@ -310,13 +367,59 @@ export function MetadataSearch() {
               </div>
             </div>
 
+            {/* Review Comments Section */}
+            <div className="border-t pt-6">
+              <h4 className="font-medium mb-4">Review Comments</h4>
+              
+              {isLoadingReviews ? (
+                <div className="text-center py-4">
+                  <div className="inline-flex items-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    <span className="text-sm text-muted-foreground">Loading reviews...</span>
+                  </div>
+                </div>
+              ) : reviews.length > 0 ? (
+                <div className="space-y-4">
+                  {reviews.map((review, index) => (
+                    <div key={review.id || index} className="border rounded-lg p-4 bg-gray-50">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-medium">
+                            {formatAddress(review.reviewer)}
+                          </span>
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            review.isApproved 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {review.isApproved ? 'Approved' : 'Rejected'}
+                          </span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(review.reviewTime * 1000).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-700">{review.comment}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4 text-muted-foreground">
+                  <p className="text-sm">No reviews submitted yet for this metadata.</p>
+                </div>
+              )}
+            </div>
+
             {/* Action Buttons */}
             <div className="border-t pt-6 flex justify-center space-x-4">
               <Button onClick={clearSearch} variant="outline">
                 New Search
               </Button>
               <Button 
-                onClick={() => window.open(`https://walrus.app/blob/${searchResult.walrusBlobId}`, '_blank')}
+                onClick={() => {
+                  setSelectedBlobId(searchResult.walrusBlobId)
+                  setWalrusModalOpen(true)
+                }}
                 variant="outline"
               >
                 View in Walrus
