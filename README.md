@@ -3,13 +3,13 @@
 <p align="center">
   Powered by<br>
   <a href="https://ledger.com" target="_blank">
-    <img src="https://www.ledger.com/wp-content/themes/ledger-v2/public/images/ledger-logo-long.svg" alt="Product 1" width="50" />
+    <img src="https://www.ledger.com/wp-content/themes/ledger-v2/public/images/ledger-logo-long.svg" alt="Product 1" width="100" />
   </a>
   <a href="https://flow.com" target="_blank">
-    <img src="https://cdn.prod.website-files.com/5f734f4dbd95382f4fdfa0ea/63ce603ae36f46f6bb67e51e_flow-logo.svg" alt="Product 2" width="50" />
+    <img src="https://cdn.prod.website-files.com/5f734f4dbd95382f4fdfa0ea/63ce603ae36f46f6bb67e51e_flow-logo.svg" alt="Product 2" width="100" />
   </a>
   <a href="https://walrus.xyz" target="_blank">
-    <img src="https://cdn.prod.website-files.com/6864f039b26f4afedada6bc5/6864f039b26f4afedada6c10_logo.svg" alt="Product 3" width="50" />
+    <img src="https://cdn.prod.website-files.com/6864f039b26f4afedada6bc5/6864f039b26f4afedada6c10_logo.svg" alt="Product 3" width="100" />
   </a>
 </p>
 
@@ -43,6 +43,8 @@ From a UX perspective, I really enjoyed the dark, high-contrast UI—it makes re
 
 Overall, I think the documentation is already strong, and its clarity makes ERC-7730 approachable even for new developers. With just a few additions—especially around setup guides, package usage, and versioning—it could become a best-in-class resource that accelerates adoption of transparent transaction signing in the Ethereum ecosystem.
 
+# Flow Deployment Addresses
+The solidity backend is deployed on Flow Testnet at deployment address: 0x433cb904fe95132a405925c35101b771bf3ba5ad
 
 # 🏗️ Project Structure
 
