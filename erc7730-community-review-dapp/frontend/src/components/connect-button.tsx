@@ -91,24 +91,35 @@ export function ConnectButton() {
       {connectors.length === 0 ? (
         <div className="text-sm text-red-500">No wallet connectors available</div>
       ) : (
-        connectors.map((connector) => (
-          <Button
-            key={connector.id}
-            onClick={() => {
-              console.log('Attempting to connect with connector:', connector)
-              connect({ connector })
-            }}
-            disabled={!connector.ready || isLoading}
-            className="flex items-center space-x-2"
-          >
-            <Wallet className="h-4 w-4" />
-            <span>
-              {isLoading && pendingConnector?.id === connector.id
-                ? 'Connecting...'
-                : `Connect ${connector.name || 'Wallet'}`}
-            </span>
-          </Button>
-        ))
+        connectors.map((connector) => {
+          console.log(`Connector ${connector.id}:`, {
+            name: connector.name,
+            ready: connector.ready,
+            readyState: connector.ready ? 'READY' : 'NOT_READY'
+          })
+          
+          return (
+            <Button
+              key={connector.id}
+              onClick={() => {
+                console.log('Attempting to connect with connector:', connector)
+                connect({ connector })
+              }}
+              disabled={!connector.ready || isLoading}
+              className="flex items-center space-x-2"
+            >
+              <Wallet className="h-4 w-4" />
+              <span>
+                {isLoading && pendingConnector?.id === connector.id
+                  ? 'Connecting...'
+                  : `Connect ${connector.name || 'Wallet'}`}
+              </span>
+              {!connector.ready && (
+                <span className="text-xs text-red-500 ml-2">(Not Ready)</span>
+              )}
+            </Button>
+          )
+        })
       )}
     </div>
   )

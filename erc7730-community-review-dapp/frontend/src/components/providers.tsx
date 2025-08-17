@@ -7,10 +7,18 @@ import { InjectedConnector } from 'wagmi/connectors/injected'
 import { Chain } from 'wagmi'
 import { RPC_URL, CHAIN_ID, NETWORK_NAME, BLOCK_EXPLORER } from '@/lib/constants'
 
+// Debug environment variables
+console.log('🔧 Providers: Environment variables:', {
+  CHAIN_ID,
+  NETWORK_NAME,
+  RPC_URL: RPC_URL?.substring(0, 30) + '...',
+  BLOCK_EXPLORER: BLOCK_EXPLORER?.substring(0, 30) + '...'
+})
+
 // Custom Flow EVM Testnet chain configuration
 const flowTestnetChain: Chain = {
-  id: CHAIN_ID,
-  name: NETWORK_NAME,
+  id: CHAIN_ID || 545, // Fallback to Flow EVM Testnet
+  name: NETWORK_NAME || 'Flow EVM Testnet',
   network: 'flow-testnet',
   nativeCurrency: {
     decimals: 18,
@@ -18,11 +26,11 @@ const flowTestnetChain: Chain = {
     symbol: 'FLOW',
   },
   rpcUrls: {
-    default: { http: [RPC_URL] },
-    public: { http: [RPC_URL] },
+    default: { http: [RPC_URL || 'https://testnet.evm.nodes.onflow.org'] },
+    public: { http: [RPC_URL || 'https://testnet.evm.nodes.onflow.org'] },
   },
   blockExplorers: {
-    default: { name: NETWORK_NAME, url: BLOCK_EXPLORER },
+    default: { name: NETWORK_NAME || 'Flow EVM Testnet', url: BLOCK_EXPLORER || 'https://evm-testnet.flowscan.io' },
   },
 }
 
@@ -58,6 +66,13 @@ const config = createConfig({
   ],
   publicClient,
   webSocketPublicClient,
+})
+
+// Debug config
+console.log('🔧 Providers: Wagmi config created:', {
+  chains: config.chains?.map(c => ({ id: c.id, name: c.name })),
+  connectors: config.connectors?.map(c => ({ id: c.id, name: c.name })),
+  publicClient: !!config.publicClient
 })
 
 export function Providers({ children }: { children: React.ReactNode }) {

@@ -26,9 +26,11 @@ export const IS_TEST = process.env.NODE_ENV === 'test'
 export const WALRUS_PUBLISHER_BASE_URL = process.env.NEXT_PUBLIC_WALRUS_PUBLISHER_BASE_URL!
 export const WALRUS_AGGREGATOR_BASE_URL = process.env.NEXT_PUBLIC_WALRUS_AGGREGATOR_BASE_URL!
 
-// Validate required environment variables
-if (!CONTRACT_ADDRESS) throw new Error('NEXT_PUBLIC_CONTRACT_ADDRESS is required')
-if (!RPC_URL) throw new Error('NEXT_PUBLIC_RPC_URL is required')
-if (!CHAIN_ID) throw new Error('NEXT_PUBLIC_CHAIN_ID is required')
-if (!NETWORK_NAME) throw new Error('NEXT_PUBLIC_NETWORK_NAME is required')
-if (!BLOCK_EXPLORER) throw new Error('NEXT_PUBLIC_BLOCK_EXPLORER is required')
+// Validate required environment variables (only in development)
+if (process.env.NODE_ENV === 'development') {
+  if (!CONTRACT_ADDRESS) console.warn('NEXT_PUBLIC_CONTRACT_ADDRESS is missing')
+  if (!RPC_URL) console.warn('NEXT_PUBLIC_RPC_URL is missing')
+  if (!CHAIN_ID) console.warn('NEXT_PUBLIC_CHAIN_ID is missing')
+  if (!NETWORK_NAME) console.warn('NEXT_PUBLIC_NETWORK_NAME is missing')
+  if (!BLOCK_EXPLORER) console.warn('NEXT_PUBLIC_BLOCK_EXPLORER is missing')
+}
