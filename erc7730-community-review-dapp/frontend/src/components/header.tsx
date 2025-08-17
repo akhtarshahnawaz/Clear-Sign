@@ -46,7 +46,10 @@ export function Header() {
                       href={item.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm font-medium transition-colors hover:text-primary border border-gray-300 rounded px-3 py-1.5 hover:border-gray-400"
+                      className={cn(
+                        'text-sm font-medium transition-colors hover:text-primary',
+                        'text-muted-foreground'
+                      )}
                     >
                       {item.name}
                     </a>
